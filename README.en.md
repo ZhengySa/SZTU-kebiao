@@ -138,7 +138,8 @@ Five tables: `semester`, `time_slot`, `course`, `course_session`, `import_source
 
 `local.properties` needs `sdk.dir`. The project was built against an Android Studio 2026.2 / JDK 25 toolchain — on an older toolchain you'll need to downgrade AGP and the Gradle wrapper together; see [docs/07](docs/07-build-environment.md) for the version matrix and the traps (AGP 9 bundles Kotlin, so the `kotlin-android` plugin must not be added).
 
-> Note: the build script in this repo (`build.bat`) points at absolute paths from the original development machine. Adjust it, or just use `./gradlew`.
+> The distribution URL in `gradle-wrapper.properties` points at a Tencent Cloud mirror, because `services.gradle.org` is unreliable from mainland China. Switch `distributionUrl` back to `https\://services.gradle.org/distributions/gradle-9.8.2-bin.zip` if you prefer the official host.
+> `build.bat` only locates `JAVA_HOME` and forwards to `gradlew.bat`; feel free to just run `./gradlew`.
 
 ---
 

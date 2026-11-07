@@ -139,7 +139,9 @@ app/src/main/java/com/classflow/timetable/
 
 `local.properties` 里需要有 `sdk.dir`。本项目是在 Android Studio 2026.2 / JDK 25 工具链上编译的 —— 换成更老的工具链，得把 AGP 和 Gradle wrapper 一起降级；版本矩阵和坑见 [docs/07](docs/07-build-environment.md)（AGP 9 自带 Kotlin，所以**不能**再加 `kotlin-android` 插件）。
 
-> 注意：仓库里的 `build.bat` 写的是原开发机的绝对路径。自己改一下，或者直接用 `./gradlew`。
+> `gradle-wrapper.properties` 里的分发地址指向腾讯云镜像（官方的 `services.gradle.org` 在国内经常下不动）。
+> 想换回官方，把 `distributionUrl` 改回 `https\://services.gradle.org/distributions/gradle-9.8.2-bin.zip` 就行。
+> `build.bat` 只是帮忙找 `JAVA_HOME` 再转给 `gradlew.bat`，用不上可以直接敲 `./gradlew`。
 
 ---
 
