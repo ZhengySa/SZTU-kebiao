@@ -2,6 +2,11 @@
 
 **A timetable app for SZTU students that logs into the school's academic system and pulls the whole semester for you.**
 
+> ### 📱 [Download the APK](https://github.com/ZhengySa/SZTU-kebiao/releases/latest)
+> Open the latest release, grab `ClassFlow-v*.apk` from **Assets**, and install it (allow "unknown sources").
+> No Android Studio, no toolchain setup. Requires Android 8.0 (API 26)+.
+> Self-signed build — future versions install right over it and keep your data.
+
 No screenshot-OCR, no CSV massaging, no typing 30 courses by hand. One tap on the school's own login page (captcha and all), and your week is on screen — with a liquid-glass UI, a home-screen widget, grades, and a campus bus timetable on top.
 
 [中文说明](README.md) · [Feature tour](#features) · [How it works](#how-it-works) · [Build](#build)
