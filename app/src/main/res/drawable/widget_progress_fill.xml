@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  学期进度条的填充段：蓝→紫渐变，浅色/深色壁纸下都成立，
+  所以不拆 day/night 两份。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <corners android:radius="2dp" />
+    <gradient
+        android:angle="0"
+        android:startColor="#3D5AFE"
+        android:endColor="#9B3FF0"
+        android:type="linear" />
+</shape>

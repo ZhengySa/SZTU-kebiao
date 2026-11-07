@@ -1,0 +1,421 @@
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<style>
+    
+</style>
+<head>
+    <meta charset="UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/jsxsd/assets/css/login.css">
+    <link rel="stylesheet" type="text/css" href="/jsxsd/css/style.css">
+    <link rel="stylesheet" type="text/css" href="/jsxsd/assets/plugins/layui/layui.css"/>
+    <title>登录</title>
+    <meta http-equiv="keywords" content="教务管理 数字校园 综合教务管理 教学管理 中职数字校园 强智科技 高校教务 迎新 学工系统 收费系统 人事管理 科研管理 课程资源 网站群 在线支付管理 一卡通 智慧教室" />
+    <meta http-equiv="description" content="湖南强智科技发展有限公司（www.qzdatasoft.com）是中国数字化校园软件专业提供商。十多年来，强智科技一直致力于中国教育信息化平台的研发与推广；强智新一代综合教学管理平台将教、学、管理、服务与决策完美结合的设计理念，众多高校的成功实施，必将成为行业的标杆，永载史册。" />
+
+</head>
+<body>
+        <div class="edu-container-new">
+            <div class="edu-content-new">
+                <div class="lf">
+                    <div class="edu-map-new">
+                        <div class="layui-carousel" id="swiper">
+                            <div class="logo-area-new">
+                                <img src="/jsxsd/assets/images/logo.png" alt="">
+                                <p>教务一体化系统</p>
+                            </div>
+                            <div carousel-item>
+                                <img src="/jsxsd/assets/images/swiper.png" style="width:358px;height:320px"/>
+                                <img src="/jsxsd/assets/images/swiper1x.png" style="width:358px;height:320px"/>
+                                <img src="/jsxsd/assets/images/swiper2x.png" style="width:358px;height:320px"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <form id="loginForm" name="loginForm" action="/jsxsd/xk/LoginToXk" method="post">
+                    <input type="hidden" name="loginMethod" value="LoginToXk">
+                    <div class="rt login-form-new">
+                        <h2>用户登录</h2>
+                        <p style="margin-bottom: 12px">&nbsp;&nbsp;</p>
+                        <div class="form-item-new">
+                            <span for="">账号</span>
+                            <input type="text"  id="userAccount" name="userAccount" placeholder="请输入账号">
+                        </div>
+                        <div class="form-item-new">
+                            <span for="">密码</span>
+                            <input type="password"  id="userPassword" name="userPassword"  placeholder="请输入密码">
+                        </div>
+                        <div class="form-item">
+                            <font color="red" size="2" id="showMsg">	 请先登录系统</font>
+                        </div>
+
+                        
+                        <div class="form-item-new">
+                            <span for="">验证码</span>
+                            <input type="text" class="form-control" style="width: 100%" id="RANDOMCODE" name="RANDOMCODE" placeholder="请输入验证码">
+                            <img src="/jsxsd/verifycode.servlet" id="SafeCodeImg"  onclick="ReShowCode()" class="auth-code-img"/>
+                        </div>
+                        
+                        
+                        <div class="form-item-new">
+                            
+                                <a class="password-text rt" href="/jsxsd/view/findpwd/enteraccount.htmlx" target="_blank" >忘记密码</a>
+                            
+                            
+                            
+                        </div>
+                        
+                        <a class="btn-login-new" id="btn-login" onclick="submitForm1()" >登录</a>
+                        <div class="form-item">
+                        </div>
+                        
+                            <p class="login-cr" style="color: red;"> 温馨提示：推荐使用谷歌Chrome浏览器以及360极速模式。</p>
+                            <p style=" position: absolute;width: 100%; left: 0;text-align: center;bottom: -4px;color: red;" > &nbsp;&nbsp;推荐在分辨率1920*1080下使用最佳。</p>
+                            <p style=" position: absolute;width: 100%; left: 0;text-align: center;bottom: -32px;color: #C8C8C8;" >Copyright © 2020.湖南强智科技发展有限公司 </p>
+                        
+                        <input name="encoded" id="encoded" type="hidden" value=""/>
+                        
+                        
+                    </div>
+                </form>
+            </div>
+
+        </div>
+</body>
+</html>
+
+
+<script src="/jsxsd/assets/js/comm/jquery.min.js"></script>
+<script type="text/javascript" src="/jsxsd/js/jqChart/js/jquery-3.5.1.min.js"></script>
+<script type="text/javascript" src="/jsxsd/js/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="/jsxsd/js/conwork.js"></script>
+<script src="/jsxsd/assets/plugins/layui/layui.all.js" type="text/javascript" charset="utf-8"></script>
+<script language="javascript">
+    (function () {
+        var xxdm = '14655';
+        if(xxdm == '10534'){
+            $("#indexbg").removeClass("edu-container-new").addClass("edu-container-new_hnkjdx");
+        }
+        if(xxdm == '12649'){
+            $("#indexbg").removeClass("edu-container-new").addClass("edu-container-new_hnkjdxxxxy");
+        }
+    })();
+
+
+    layui.use('carousel', function(){
+        var carousel = layui.carousel;
+        //建造实例
+        carousel.render({
+            elem: '#swiper',
+            width: '100%' ,
+            height:'100%',
+            arrow: 'none' ,
+            indicator:'inside'
+        });
+    });
+    $('select').change(function(){
+        $(this).css('color','#272727');
+        $(this).css('font-weight','400');
+    });
+    //是否启用APP下载二维码
+    
+    function ReShowCode(){
+        var SafeCodeImg = document.getElementById("SafeCodeImg");
+        var url="/jsxsd/verifycode.servlet?t="+Math.random();
+        SafeCodeImg.src = url;
+    }
+
+    function ReShowCode(){
+        var SafeCodeImg = document.getElementById("SafeCodeImg");
+        var url = "/jsxsd/verifycode.servlet?t="+Math.random();
+        SafeCodeImg.src = url;
+    }
+    function login() {
+        if($("#userAccount").val() == "") {
+            $("#showMsg").text("请输入账号");
+            $("#userAccount").focus();
+            return false;
+        }
+        if($("#userPassword").val() == "") {
+            $("#showMsg").text("请输入密码");
+            $("#userPassword").focus();
+            return false;
+        }
+        
+        if($("#RANDOMCODE").val() == "") {
+            $("#showMsg").text("请输入验证码");
+            $("#RANDOMCODE").focus();
+            return false;
+        }
+        
+
+        var strUrl = "/jsxsd/Logon.do?method=logon&flag=sess";
+
+
+        $.ajax( {
+            url:strUrl,
+            type:"post",
+            cache:false,
+            dataType:"text",
+            success:function(dataStr) {
+                if(dataStr=="no"){
+                    return false;
+                }else{
+                    var scode=dataStr.split("#")[0];
+                    var sxh=dataStr.split("#")[1];
+
+                    var code=document.getElementById("userAccount").value+"%%%"+document.getElementById("userPassword").value;
+                    var encoded="";
+                    for(var i=0;i<code.length;i++){
+                        if(i<20){
+                            encoded=encoded+code.substring(i,i+1)+scode.substring(0,parseInt(sxh.substring(i,i+1)));
+                            scode = scode.substring(parseInt(sxh.substring(i,i+1)),scode.length);
+                        }else{
+                            encoded=encoded+code.substring(i,code.length);
+                            i=code.length;
+                        }
+                    }
+                    document.getElementById("encoded").value=encoded;
+                    if("LoginToXk"!="logonLdap"){
+                        document.getElementById("userPassword").value="";
+                    }
+
+                    document.getElementById("loginForm").submit();
+                }
+            },
+            error:function() {
+                alert("计算异常！");
+            }
+        });
+    }
+    $(function(){
+        $(document).on("keyup", function(e){
+            if(e.keyCode == 13) {
+                submitForm1();
+            }
+        });
+    });
+
+
+    function submitForm1(){
+        try{
+            var xh = document.getElementById("userAccount").value;
+            var pwd = document.getElementById("userPassword").value;
+            if(xh==""){
+                alert("用户名不能为空！");
+                return false;
+            }
+            if(pwd==""){
+                alert("密码不能为空！");
+                return false;
+            }
+
+            var account = encodeInp(xh);
+
+            var passwd = encodeInp(pwd);
+            var encoded = account+"%%%"+passwd;
+            document.getElementById("encoded").value = encoded;
+
+        //    var jzmmid = document.getElementById("Form1").jzmmid;
+        //    alert('=====sss=');
+            if("LoginToXk"!="logonLdap"){
+                document.getElementById("userPassword").value="";
+            }
+            document.getElementById("loginForm").submit();
+        }catch(e){
+            alert(e);
+            return false;
+        }
+    }
+
+    //根据用户帐号选择登录服务器
+    function selectServer(uName){
+        var enableServers = true;//是否启用多服务器 true/false
+        var serversArray = new Array();//服务器列表
+
+        
+        serversArray[0] = "http://null:null/";
+        
+        serversArray[1] = "http://null:null/";
+        
+        serversArray[2] = "http://null:null/";
+        
+        serversArray[3] = "http://null:null/";
+        
+        serversArray[4] = "http://null:null/";
+        
+        serversArray[5] = "http://null:null/";
+        
+
+        var loginUrl = "xk/LoginToXk";
+        if(enableServers == true){
+            if(!/[^\d]/.test(uName)){//必须为数字
+                var modVal = eval(uName % serversArray.length);
+                loginUrl = serversArray[modVal] + loginUrl;
+            }else{
+                loginUrl = serversArray[0] + loginUrl;
+            }
+        }else{
+            loginUrl = "/jsxsd"+ loginUrl;
+        }
+        return loginUrl;
+    }
+
+    /***
+     *切换验证码
+     **/
+    function QRcodeFun(type) {
+        if("1" == type ){
+            $("#ul1").hide();
+            $("#ul2").show();
+            $("#QRcodeSkip").hide();
+        }else{
+            $("#ul2").hide();
+            $("#ul1").show();
+            $("#QRcodeSkip").show();
+        }
+
+    }
+
+    function getBrowser(n) {
+        var ua = navigator.userAgent.toLowerCase(),
+            s,
+            name = '',
+            ver = 0;
+        //探测浏览器
+        (s = ua.match(/msie ([\d.]+)/)) ? _set("IE", _toFixedVersion(s[1])):
+            (s = ua.match(/firefox\/([\d.]+)/)) ? _set("firefox", _toFixedVersion(s[1])) :
+                (s = ua.match(/chrome\/([\d.]+)/)) ? _set("chrome", _toFixedVersion(s[1])) :
+                    (s = ua.match(/opera.([\d.]+)/)) ? _set("opera", _toFixedVersion(s[1])) :
+                        (s = ua.match(/version\/([\d.]+).*safari/)) ? _set("safari", _toFixedVersion(s[1])) : 0;
+
+        function _toFixedVersion(ver, floatLength) {
+            ver = ('' + ver).replace(/_/g, '.');
+            floatLength = floatLength || 1;
+            ver = String(ver).split('.');
+            ver = ver[0] + '.' + (ver[1] || '0');
+            ver = Number(ver).toFixed(floatLength);
+            return ver;
+        }
+        function _set(bname, bver) {
+            name = bname;
+            ver = bver;
+        }
+        return (n == 'n' ? name : (n == 'v' ? ver : name + ver));
+    }
+
+    var neihe = getBrowser("n"); // 所获得的就是浏览器所用内核。
+    var banben = getBrowser("v");// 所获得的就是浏览器的版本号。
+    var browser = getBrowser();// 所获得的就是浏览器内核加版本号。
+    if(browser=='IE10.0' || browser=='IE9.0' || browser=='IE8.0' || browser=='IE7.0' || browser=='IE6.0' || browser=='IE5.0'){
+        $("#showMsg").text("当前浏览器版本不适用，请使用推荐浏览器");
+        document.getElementById("btn-login").innerHTML="查看推荐浏览器";
+        document.getElementById("btn-login").onclick = myAlert;
+
+    }
+    function myAlert(){
+        window.open('/jsxsd/framework/findllq.htmlx',450,200);
+    }
+
+    function wjmm(){
+        alert("联系学院教学秘书进行密码重置");
+        return false;
+    }
+   
+    (function ($) {
+        $.fn.extend({
+            capsLockTip: function () {
+                return this.each(function () {
+                    //创建对象实例并保存。
+                    //获取实例对象：var api = $("#txtPWD").data("txtPWD");
+                    var ins = new $.CapsLockTip($(this));
+                    $(this).data(this.id, ins);
+                });
+            }
+        });
+
+
+        //创建一个实例。
+        //___target jq目标对象。
+        //___divTipID   显示提示文本的div。
+        $.CapsLockTip = function (___target) {
+            //设置当前实例的配置参数。
+            this.target = ___target;
+            var _this = this;
+
+            $(document).ready(function () {
+                _this.target.bind("keypress", function (_event) {
+                    var e = _event || window.event;
+                    var kc = e.keyCode || e.which;
+                    var isShift = e.shiftKey || (kc == 16) || false;
+                    $.fn.capsLockTip.capsLockActived = false;
+                    if ((kc >= 65 && kc <= 90 && !isShift) || (kc >= 97 && kc <= 122 && isShift))
+                        $.fn.capsLockTip.capsLockActived = true;
+                    _this.showTips($.fn.capsLockTip.capsLockActived);
+                });
+
+                _this.target.bind("keydown", function (_event) {
+                    var e = _event || window.event;
+                    var kc = e.keyCode || e.which;
+                    if (kc == 20 && null != $.fn.capsLockTip.capsLockActived){
+                        $.fn.capsLockTip.capsLockActived = !$.fn.capsLockTip.capsLockActived;
+                        _this.showTips($.fn.capsLockTip.capsLockActived);
+                    }
+                });
+
+                _this.target.bind("focus", function (_event) {
+                    if (null != $.fn.capsLockTip.capsLockActived)
+                        _this.showTips($.fn.capsLockTip.capsLockActived);
+                });
+
+                _this.target.bind("blur", function (_event) {
+                    _this.showTips(false);
+                });
+            });
+
+            //创建显示大写锁定的div。
+            this.createTooltip = function(){
+                if(null != $.fn.capsLockTip.divTip)
+                    return $.fn.capsLockTip.divTip;
+
+                $("body").append("<div id='divTip__985124855558842555' style='width:100px; height:25px; padding-top:3px; display:none; position:absolute; z-index:9999999999999; text-align:center; background-color:#FDF6AA; color:Red; font-size:12px; border:solid 1px #DBC492; border-bottom-color:#B49366; border-right-color:#B49366;'>大写锁定已打开</div>");
+                $.fn.capsLockTip.divTip = $("#divTip__985124855558842555");
+
+                return $.fn.capsLockTip.divTip;
+            };
+
+            //显示或隐藏大写锁定提示。
+            this.showTips = function (display) {
+                var divTip = _this.createTooltip();
+                if (display) {
+                    var offset = _this.target.offset();
+                    divTip.css("left", offset.left + "px");
+                    divTip.css("top", offset.top + _this.target[0].offsetHeight + 3 + "px");
+                    divTip.show();
+                }
+                else {
+                    divTip.hide();
+                }
+            };
+
+            //jq控件公用静态对象。
+
+            //提示框。
+            $.fn.capsLockTip.divTip = null;
+            //大写锁定键状态
+            $.fn.capsLockTip.capsLockActived = null;
+        };
+    })(jQuery);
+    $("#userPassword").capsLockTip();
+</script>

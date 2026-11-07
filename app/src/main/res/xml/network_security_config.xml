@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  网络安全配置：默认禁止明文 HTTP，只给学校两个域名开一个口子。
+
+  为什么必须开：教务系统 httpS 首页会 302 到 http 的登录入口
+  （Location: http://jwxt.sztu.edu.cn/Logon.do?method=logonSSOszjsdx），
+  这不是我们能改的，学校服务器就是这么配的。如果全局 usesCleartextTraffic="false"，
+  Android 会直接抛 "Cleartext HTTP traffic not permitted"，同步一开始就失败。
+
+  所以这里采用"最小开口"：只有这两个域名允许 http，其它任何地址仍然是禁止明文，
+  再加上 SztuConfig.ALLOWED_HOSTS 的代码级白名单，双重约束。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">jwxt.sztu.edu.cn</domain>
+        <domain includeSubdomains="false">auth.sztu.edu.cn</domain>
+    </domain-config>
+</network-security-config>

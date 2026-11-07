@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  深色壁纸下的玻璃底。
+  深色玻璃不能直接"反相"：白色会变成灰色，整块看起来像半死不活的塑料。
+  正确的做法是保持"暖白微透"，只把透明度降下来，让深色壁纸透上来形成烟熏玻璃。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <gradient
+                android:angle="270"
+                android:centerColor="#40323C4E"
+                android:endColor="#33262F40"
+                android:startColor="#4D3A4557"
+                android:type="linear" />
+            <stroke
+                android:width="1dp"
+                android:color="#59FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

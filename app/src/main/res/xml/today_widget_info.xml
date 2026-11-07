@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  今日课表小组件的系统声明。
+
+  尺寸说明：
+  - 4x2（横着一条，很多人也称 2x4）：minWidth 250dp / minHeight 110dp
+  - 4x4（正方形大块）：用户拖大后自动切到更高的布局
+  真正的适配在 TodayWidget 的 SizeMode.Responsive 里，这里只给系统一个初始尺寸。
+
+  updatePeriodMillis = 30 分钟（系统允许的最小值）：这是唯一**由系统侧驱动**的刷新，
+  不依赖 App 进程存活、不受厂商后台清理影响。之前的 0 + WorkManager 组合在 MIUI 上
+  被静默杀掉是「小组件第二天还显示昨天的课」的直接原因。
+  更准的那一跳由 AlarmManager 00:02 的精确闹钟负责（见 WidgetRefreshScheduler），
+  这里只是兜底：即使闹钟没电、被 Doze 推迟，最多 30 分钟也会自己变对。
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minHeight="110dp"
+    android:minResizeHeight="110dp"
+    android:minResizeWidth="150dp"
+    android:minWidth="250dp"
+    android:previewImage="@mipmap/ic_launcher"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="2"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

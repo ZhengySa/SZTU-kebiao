@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  小组件的「液态玻璃」底层。
+
+  桌面小组件（RemoteViews）**不支持实时背景模糊** —— 这是系统限制，不是偷懒：
+  Glance 只能把 Color / Drawable / Bitmap 交给启动器绘制，拿不到壁纸像素。
+  所以这里用三层叠出"磨砂玻璃"的观感：
+
+    1. 半透明竖向渐变（75% → 88%），让壁纸的光影隐约透上来
+    2. 1dp 内描边，模拟玻璃边缘的折射高光 —— 这一层最关键，
+       没有描边的半透明色块看起来就是「塑料片」
+    3. 大圆角，让它在壁纸上像一块独立的玻璃片而不是贴纸
+
+  纯白实心（上一版）在浅色壁纸上看不出边界，在深色壁纸上又刺眼，两头都不对。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <gradient
+                android:angle="270"
+                android:centerColor="#D9EDF1FB"
+                android:endColor="#C4E6EBF6"
+                android:startColor="#E8F3F6FF"
+                android:type="linear" />
+            <stroke
+                android:width="1dp"
+                android:color="#8AFFFFFF" />
+        </shape>
+    </item>
+</layer-list>

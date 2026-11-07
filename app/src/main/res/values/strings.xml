@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">课表</string>
+
+    <!-- 桌面小组件 -->
+    <string name="widget_label">今日课表</string>
+    <string name="widget_description">在桌面直接看到今天要上的课，点一下打开课表</string>
+
+    <!-- 课前提醒 -->
+    <string name="reminder_channel_name">上课提醒</string>
+    <string name="reminder_channel_description">上课前提醒你，可在这里关闭通知</string>
+</resources>

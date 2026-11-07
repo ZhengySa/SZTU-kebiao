@@ -1,0 +1,2896 @@
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+
+
+<head id="headerid1">
+	<base target='_self'>
+	<title>学生个人考试成绩</title>
+	<meta http-equiv="pragma" content="no-cache">
+	<meta http-equiv="cache-control" content="no-cache">
+	<meta http-equiv="expires" content="0">
+	<meta http-equiv="keywords" content="湖南强智科技教务系统">
+	<meta http-equiv="description" content="湖南强智科技教务系统">
+	<meta http-equiv="X-UA-Compatible" content="IE=EmulateIE8" />
+<script type="text/javascript" src="/jsxsd/js/jquery-min.js" language="javascript" ></script>
+<script type="text/javascript" src="/jsxsd/js/common.js" language="javascript" ></script>
+<script type="text/javascript" src="/jsxsd/js/iepngfix_tilebg.js" language="javascript" ></script>
+
+<script type="text/javascript" src="/jsxsd/js/jquery.autocomplete.min.js" language="javascript" ></script>
+<script type="text/javascript" src="/jsxsd/assets/js/jquery.min.js"></script>
+<script type="text/javascript" src="/jsxsd/assets/plugins/layui/laydate.js"></script>
+<script src="/jsxsd/assets/plugins/layui/layui.all.js"></script>
+<script type="text/javascript" src="/jsxsd/assets/plugins/pagination/pagination.js" language="javascript" ></script>
+<link href="/jsxsd/framework/images/common.css" rel="stylesheet" type="text/css" />
+<link href="/jsxsd/framework/images/blue.css" rel="stylesheet" type="text/css" id="link_theme" />
+<link href="/jsxsd/framework/images/workstation.css" rel="stylesheet" type="text/css" />
+<link href="/jsxsd/css/easyui.css" rel="stylesheet" type="text/css" />
+<link href="/jsxsd/css/jquery.autocomplete.css" rel="stylesheet" type="text/css" />
+
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/css/modules/reset-table-style.css"/>
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/css/common.css"/>
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/css/ui.css"/>
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/plugins/layui/layui.css">
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/plugins/layui/laydate.css"/>
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/plugins/pagination/pagination.css"/>
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/css/modules/timetable-inquire.css" />
+<link rel="stylesheet" type="text/css" href="/jsxsd/assets/css/modules/query-condition-div.css" />
+</head>
+<style type="text/css">
+	.loading-mask {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.5);
+		z-index: 9999;
+		display: none;
+	}
+	.loading-content {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		color: #333;
+		text-align: center;
+		background-color: #fff;
+		padding-top: 16px;
+		padding: 20px;
+		border-radius: 2px;
+	}
+
+	.spinner {
+		margin: 20px auto;
+		width: 40px;
+		height: 40px;
+		border: 4px solid #f3f3f3;
+		border-radius: 50%;
+		border-top: 4px solid #3498db;
+		animation: spin 1s linear infinite;
+	}
+
+	@keyframes spin {
+		0% {
+			transform: rotate(0deg);
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+</style>
+<iframe id="notSession" name="notSession" style="display: none;" src=""></iframe>
+<input type="hidden" name="shouyedizhi" id="shouyedizhi" value="/jsxsd"/>
+<div class="loading-mask" id="loadingMask-dc" style="display:none">
+	<div class="loading-content">
+		<div class="spinner"></div>
+		<h3>数据导出中，请稍候...</h3>
+	</div>
+</div>
+<div class="loading-mask" id="loadingMask-dr" style="display:none">
+	<div class="loading-content">
+		<div class="spinner"></div>
+		<h3>数据导入中，请稍候...</h3>
+	</div>
+</div>
+<script type="text/javascript">
+jQuery(document).ready(function(){
+	window.setInterval(function(){
+		 document.getElementById("notSession").src = "/jsxsd/framework/blankPage.jsp";
+	 }, 1000 * 60 * 10);
+
+
+});
+
+
+</script>
+
+
+
+<!--  -->
+
+
+<div  >
+	<!-- <div class="Nsb_r_title"><a href="/jsxsd/framework/main.jsp"">首页</a> » 考试成绩 » 课程成绩查询 » 查询列表</div>
+	<input type="button" id="btn_back" class="button" value="返 回" onclick="window.location.href='/jsxsd/kscj/cjcx_query';"/> -->
+	
+	查询条件：开课时间【全部学期】&nbsp;&nbsp;显示方式【全部】&nbsp;&nbsp;
+	  所修门数:30 所修总学分:64.5 平均学分绩点:3.11 平均学分绩:79.09 已获得学分:64.5 专业绩点排名/专业总人数:95/157 
+	
+	<!--
+		user:promition fucecode="NEW_XSD_XJCJ_WDCJ_KCCJCX_XSCJKDY">
+			<input type="button" id="btn_xscjk" value="学生成绩卡  " onclick="printXscjk(1);" class="button el-button"/>
+		/user:promition>
+		user:promition fucecode="NEW_XSD_XJCJ_WDCJ_KCCJCX_BJGXSCJKDY">
+			<input type="button" id="btn_bjgxscjk" value="不及格学生成绩卡  " onclick="printXscjk(2);"   class="button el-button"/>
+		/user:promition>
+		-->
+	
+	
+	
+	
+
+
+
+	
+	
+	
+	
+	
+
+	<table id="dataList" width="100%" border="0" cellspacing="0" cellpadding="0" class="layui-table">
+		<tr>
+			<th class="Nsb_r_list_thb" style="width: 35px;">序号</th>
+			<th class="Nsb_r_list_thb" style="width: 140px;">开课学期</th>
+			<th class="Nsb_r_list_thb" style="width: 110px;">课程编号</th>
+			<th class="Nsb_r_list_thb" style="width: 110px;">课程名称</th>
+			
+			
+
+			<th class="Nsb_r_list_thb" style="width: 60px;">
+				成绩</th>
+
+			
+			
+			<th class="Nsb_r_list_thb" style="width: 50px;">总评成绩</th>
+			<th class="Nsb_r_list_thb" style="width: 50px;">成绩标识</th>
+			
+			<th class="Nsb_r_list_thb" style="width: 50px;">学分</th>
+			<th class="Nsb_r_list_thb" style="width: 50px;">总学时</th>
+			
+			<th class="Nsb_r_list_thb" style="width: 50px;">绩点</th>
+			<th class="Nsb_r_list_thb" style="width: 110px;">补重学期</th>
+			
+			
+
+			
+
+			<th class="Nsb_r_list_thb" style="width: 60px;">考核方式</th>
+			<th class="Nsb_r_list_thb" style="width: 60px;">考试性质</th>
+			<th class="Nsb_r_list_thb" style="width: 60px;">课程属性</th>
+			
+			<th class="Nsb_r_list_thb" style="width: 80px;">课程性质</th>
+			
+			
+			
+			
+            <th class="Nsb_r_list_thb" style="width: 80px;">通选课类别</th>
+
+		</tr>
+		
+			<tr>
+				<td>1</td>
+				<td>2025-2026-1</td>
+				<td align="left">AD00026</td>
+				<td align="left">实验室安全教育</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											通过
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>0</td>
+				<td>6</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td></td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>2</td>
+				<td>2025-2026-1</td>
+				<td align="left">CP00005</td>
+				<td align="left">大学物理B1</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											78
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>3</td>
+				<td>54</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>3</td>
+				<td>2025-2026-1</td>
+				<td align="left">CP00007</td>
+				<td align="left">大学物理实验B1</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											75
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>其它</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>4</td>
+				<td>2025-2026-1</td>
+				<td align="left">FD00009</td>
+				<td align="left">军事理论</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											78
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>5</td>
+				<td>2025-2026-1</td>
+				<td align="left">FD00010</td>
+				<td align="left">军事训练</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											81
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>6</td>
+				<td>2025-2026-1</td>
+				<td align="left">FD00011</td>
+				<td align="left">体育俱乐部 I</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											84
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>0.5</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>7</td>
+				<td>2025-2026-1</td>
+				<td align="left">FL00632</td>
+				<td align="left">大学英语B1</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											79
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>8</td>
+				<td>2025-2026-1</td>
+				<td align="left">FL00706</td>
+				<td align="left">德语A1入门</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											60
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						D
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>1</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>9</td>
+				<td>2025-2026-1</td>
+				<td align="left">IB00225</td>
+				<td align="left">高等数学A1</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											80
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>4</td>
+				<td>72</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>10</td>
+				<td>2025-2026-1</td>
+				<td align="left">IB00431</td>
+				<td align="left">大学计算机与人工智能 A</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											89
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>4</td>
+				<td>72</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>11</td>
+				<td>2025-2026-1</td>
+				<td align="left">IWM2525</td>
+				<td align="left">AI Applications in Manufacturing</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											通过
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>1</td>
+				<td>14</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td></td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>公选</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td>国际</td>
+
+			</tr>
+		
+			<tr>
+				<td>12</td>
+				<td>2025-2026-1</td>
+				<td align="left">JYG2303</td>
+				<td align="left">大学生职业生涯规划</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											86
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>1</td>
+				<td>18</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>公选</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td>生涯发展</td>
+
+			</tr>
+		
+			<tr>
+				<td>13</td>
+				<td>2025-2026-1</td>
+				<td align="left">MA00003</td>
+				<td align="left">形势与政策1</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											96
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>0.5</td>
+				<td>9</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>14</td>
+				<td>2025-2026-1</td>
+				<td align="left">MA00015</td>
+				<td align="left">马克思主义基本原理</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											77
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>3</td>
+				<td>54</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>15</td>
+				<td>2025-2026-1</td>
+				<td align="left">QSG2513</td>
+				<td align="left">现代标准化：从理论到全球实践</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											74
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						C+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>2.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>公选</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td>自然科学</td>
+
+			</tr>
+		
+			<tr>
+				<td>16</td>
+				<td>2025-2026-1</td>
+				<td align="left">SA00001</td>
+				<td align="left">大学生心理健康</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											88
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>17</td>
+				<td>2025-2026-1</td>
+				<td align="left">SC00001</td>
+				<td align="left">大学生国家安全教育</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											95
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>1</td>
+				<td>18</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>18</td>
+				<td>2025-2026-1</td>
+				<td align="left">SG00239</td>
+				<td align="left">行业认知</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											88
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>1</td>
+				<td>18</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>实践课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>19</td>
+				<td>2025-2026-2</td>
+				<td align="left">CP00006</td>
+				<td align="left">大学物理B2</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											82
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>3</td>
+				<td>54</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>20</td>
+				<td>2025-2026-2</td>
+				<td align="left">CP00008</td>
+				<td align="left">大学物理实验B2</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											80
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>其它</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>21</td>
+				<td>2025-2026-2</td>
+				<td align="left">FD00012</td>
+				<td align="left">体育俱乐部 II</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											84
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>0.5</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>22</td>
+				<td>2025-2026-2</td>
+				<td align="left">FL00633</td>
+				<td align="left">大学英语B2</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											74
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						C+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>2.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>23</td>
+				<td>2025-2026-2</td>
+				<td align="left">IB00226</td>
+				<td align="left">高等数学A2</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											63
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						D
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>6</td>
+				<td>108</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>1</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>24</td>
+				<td>2025-2026-2</td>
+				<td align="left">MA00002</td>
+				<td align="left">中国近现代史纲要</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											90
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>3</td>
+				<td>54</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>25</td>
+				<td>2025-2026-2</td>
+				<td align="left">MA00004</td>
+				<td align="left">形势与政策2</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											90
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>0.5</td>
+				<td>9</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>26</td>
+				<td>2025-2026-2</td>
+				<td align="left">MA00014</td>
+				<td align="left">思想道德与法治</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											88
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						A
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>3</td>
+				<td>54</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>4</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>27</td>
+				<td>2025-2026-2</td>
+				<td align="left">MSG0001</td>
+				<td align="left">中国戏曲史</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											80
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2</td>
+				<td>36</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考查</td>
+				<td>正常考试</td>
+				<td>公选</td>
+				
+				<td>通识课程</td>
+				
+				
+
+				
+
+				
+                <td>艺术</td>
+
+			</tr>
+		
+			<tr>
+				<td>28</td>
+				<td>2025-2026-2</td>
+				<td align="left">SG00380</td>
+				<td align="left">电路分析B</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											77
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>4</td>
+				<td>72</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>学科课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>29</td>
+				<td>2025-2026-2</td>
+				<td align="left">SG02002</td>
+				<td align="left">线性代数</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											80
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B+
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>2.5</td>
+				<td>45</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3.5</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>学科课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+			<tr>
+				<td>30</td>
+				<td>2025-2026-2</td>
+				<td align="left">SG02009</td>
+				<td align="left">C语言程序设计</td>
+				
+				
+
+				<!-- 控制成绩显示111 -->
+				
+					
+						
+						
+                            
+                            <td style="  "><!-- 小于60分不及格显示红色 -->
+                                
+                                    
+                                    
+
+                                        
+											
+											77
+											
+                                        
+                                    
+                                
+
+                            </td></td>
+                            
+
+						
+					
+				
+				
+
+				
+				
+
+				<td>
+						B
+				</td>
+
+
+				<td>
+					
+						
+					
+				</td>
+				
+				<td>3</td>
+				<td>54</td>
+
+
+				
+				<!-- 控制绩点显示 -->
+				
+					
+						
+						
+							<td>3</td>
+						
+					
+				
+				
+				<td></td>
+				
+
+				
+
+				
+
+				<td>考试</td>
+				<td>正常考试</td>
+				<td>必修</td>
+				
+				<td>学科课程</td>
+				
+				
+
+				
+
+				
+                <td></td>
+
+			</tr>
+		
+
+
+
+		
+	</table>
+
+	<form action="" method="post" name="Form1" id="Form1"></form>
+	<form  action="" name="Formfr" id="FormFr">
+		<input type="hidden" name="key" id="key" />
+	</form>
+</div>
+<br />
+<!--   -->
+<input id="PageContext" type="hidden" value="/jsxsd" />
+<script language="javascript">
+
+	//合并学年学期列
+	//jQuery("#dataList").rowspan(1);
+</script>
+<script language="javascript">
+
+	function printXscjk(type){
+		document.Form1.action = "/jsxsd/kscj/printXscjk?dytype_11437="+type;
+		document.Form1.target = "hidfrm";
+		document.Form1.submit();
+		document.Form1.target="";
+	}
+
+	function queren() {
+		$.ajax({
+			type : "GET",
+			async:false,
+			url : "/jsxsd/kscj/cjcx_list_qr",
+			data : "",
+			dataType: "json",
+			success : function(msg) {
+				alert('确认成功！');
+				$("#btn_query").prop("disabled","disabled");
+				$("#btn_query").val("已确认");
+			}
+		});
+	}
+
+	loadjs();
+	function loadjs(){
+		if( ''!=''){
+			alert('');
+		}
+	}
+	var vid="";
+	var mb="";
+	var id="";
+	function rqdy_laosha2(ids,key,rqurl,func){
+		vid=ids;
+		$("#key").val(key);
+		if(!document.getElementById("frjumpurl")){
+			$('#FormFr').append("<input type='hidden' id='frjumpurl' name='frjumpurl'  value=''  />")
+		}
+		//dwrMonitor.getFrMbxx(key,getDataResult_fr);
+		$.ajax({
+			type: "post",
+			url: $("#PageContext").val()+"/kbxx/getFrmbxx",
+			data: $('#FormFr').serialize(),
+			dataType: "json",
+			success: function(data){
+				//console.log(data);
+				if(data.success==false){
+
+				}else{
+					if(data.data==''){
+						setTimeout(func,0);
+					}else{
+						mb=data.data.mb;
+						id=data.data.ywinstanceidname;
+						var url="";
+						if(mb.indexOf(".rpx")>=0){
+							url=rqurl+"?rpx=/"+mb+"&xsxh="+ids;
+
+						}
+						$("#Form2forFr").remove();
+						$("<form></form>", {
+							target : "_blank",
+							action : url,
+							id : "Form2forFr",
+							name :"Form2forFr",
+							method :"post",
+						}).appendTo($("body"));
+						if(id!=null && id.indexOf(",")>0){
+							var strs= new Array();
+							strs=id.split(",");
+							var idl=vid.split(",");
+							for(var i=0;i<strs.length;i++){
+								$("<input></input>", {
+									name : strs[i],
+									type : "hidden",
+									value:idl[i],
+								}).appendTo($("#Form2forFr"));
+								//url+="&"+strs[i]+"="+idl[i];
+							}
+						}else{
+							$("<input></input>", {
+								name : id,
+								type : "hidden",
+								value:vid,
+							}).appendTo($("#Form2forFr"));
+							//if(id!=null)url+="&"+id+"="+vid;
+						}
+						//url
+						url+="&rpxHome=WEB-INF/reportFiles";
+						//var str_url=window.btoa(url);
+						//var base = new Base64();
+						//var str_url=base.encode(url);
+						//str_url=window.atob(str_url);
+						//alert(str_url);
+						$("#frjumpurl").val(url);
+						document.getElementById("Form2forFr").submit();
+						//JsOpenWin($("#PageContext").val()+"/fr/fr_index.jsp",1000,700);
+					}
+				}
+
+			}
+		});
+	}
+</script>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  小组件内部的小玻璃卡（"下一节"高亮卡）。
+
+  比外层更亮、更不透明，且带一点极浅的蓝色调：
+  纯白卡在彩色光斑背景上显得"死白"，加 2~4% 的蓝让它和品牌色呼应。
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="18dp" />
+            <gradient
+                android:angle="270"
+                android:centerColor="#A6EBF1FF"
+                android:endColor="#8CE6EDFF"
+                android:startColor="#C2F0F5FF"
+                android:type="linear" />
+            <stroke
+                android:width="1dp"
+                android:color="#B3FFFFFF" />
+        </shape>
+    </item>
+</layer-list>
