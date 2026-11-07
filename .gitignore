@@ -31,3 +31,12 @@ captures/
 *.log
 tmp_build.log
 tmp_test.log
+
+# 签名文件（只在发布机上存在）
+keystore.properties
+keystore/
+*.jks
+*.keystore
+
+# 例外：CI 用的公开自签名密钥，必须进仓库才能保证每次构建签名一致
+!ci/classflow-ci.jks
