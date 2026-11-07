@@ -37,7 +37,10 @@ jobs:
 
       - name: 改用官方 Gradle 源
         # 仓库里的 distributionUrl 指向腾讯云镜像（给国内用），CI 在国外反而慢
-        run: sed -i 's#https://mirrors.cloud.tencent.com/gradle/#https://services.gradle.org/distributions/#' gradle/wrapper/gradle-wrapper.properties
+        # gradlew 在 Windows 上提交时没有可执行位，Linux runner 上要补一下
+        run: |
+          chmod +x gradlew
+          sed -i 's#https://mirrors.cloud.tencent.com/gradle/#https://services.gradle.org/distributions/#' gradle/wrapper/gradle-wrapper.properties
 
       - name: 写入签名配置
         # ci/classflow-ci.jks 是随仓库公开的自签名密钥，只为保证每个版本签名一致、
@@ -75,23 +78,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cat > release-notes.md <<NOTES
+          ## 安装
+
+          1. 点下面 **Assets** 里的 `ClassFlow-v${VERSION}.apk` 下载到手机
+          2. 手机上点开安装，允许「未知来源」
+          3. 首次启动按引导登录教务、导入课表
+
+          **系统要求**：Android 8.0（API 26）及以上
+
+          ## 这版有什么
+
+          - 周课表 / 今日 / 桌面小组件
+          - 公文通（需连校园网或学校 VPN）
+          - 校园地图：C-5 教室分布 + 中德智能制造学院 13 层楼层图，可按房间号搜
+
+          ## 注意
+
+          - 自签名包，不是应用商店版本。以后新版本可直接覆盖安装，数据不会丢。
+          - 公文通走校内网地址，校外先连 VPN。
+          NOTES
           gh release create "$GITHUB_REF_NAME" dist/*.apk \
             --title "ClassFlow $GITHUB_REF_NAME" \
-            --notes "## 安装
-
-1. 点下面的 **Assets** 里的 \`ClassFlow-v${VERSION}.apk\` 下载到手机
-2. 手机上点开安装（会提示「未知来源」，允许即可）
-3. 首次启动按引导登录教务、导入课表
-
-**系统要求**：Android 8.0（API 26）及以上
-
-## 这版有什么
-
-- 周课表 / 今日 / 桌面小组件
-- 公文通（需连校园网或学校 VPN）
-- 校园地图：C-5 教室分布 + 中德智能制造学院 13 层楼层图，支持房间号搜索
-
-## 注意
-
-- 这是自签名包，不是应用商店版本。以后新版本可以直接覆盖安装，数据不会丢。
-- 公文通走校内网地址，校外请先连 VPN。"
+            --notes-file release-notes.md
