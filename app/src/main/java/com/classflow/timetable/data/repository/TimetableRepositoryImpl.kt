@@ -252,6 +252,8 @@ class TimetableRepositoryImpl @Inject constructor(
                         endSlot = session.endSlot,
                         weekRule = guessRule(session.weeks).name,
                         weekMask = WeekMask.fromWeeks(session.weeks).bits,
+                        // 每个时段自己的教室；为空说明课表没写，回落到课程级地点
+                        locationOverride = session.location,
                         createdAt = now,
                         updatedAt = now,
                     )

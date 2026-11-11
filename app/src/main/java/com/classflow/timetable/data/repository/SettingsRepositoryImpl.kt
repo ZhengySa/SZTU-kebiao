@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.classflow.timetable.domain.model.AppSettings
+import com.classflow.timetable.domain.model.BackdropStrength
 import com.classflow.timetable.domain.model.ThemeMode
 import com.classflow.timetable.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,6 +33,7 @@ class SettingsRepositoryImpl @Inject constructor(
         val reminderEnabled = booleanPreferencesKey("reminder_enabled")
         val reminderMinutes = intPreferencesKey("reminder_minutes")
         val backdropFile = stringPreferencesKey("backdrop_file")
+        val backdropStrength = stringPreferencesKey("backdrop_strength")
     }
 
     override val settings: Flow<AppSettings> = context.dataStore.data
@@ -44,6 +46,7 @@ class SettingsRepositoryImpl @Inject constructor(
                 reminderEnabled = prefs[Keys.reminderEnabled] ?: true,
                 reminderMinutes = prefs[Keys.reminderMinutes] ?: 15,
                 backdropFile = prefs[Keys.backdropFile]?.takeIf { it.isNotBlank() },
+                backdropStrength = BackdropStrength.safeOf(prefs[Keys.backdropStrength]),
             )
         }
 
@@ -63,5 +66,9 @@ class SettingsRepositoryImpl @Inject constructor(
         context.dataStore.edit { prefs ->
             if (name.isNullOrBlank()) prefs.remove(Keys.backdropFile) else prefs[Keys.backdropFile] = name
         }
+    }
+
+    override suspend fun setBackdropStrength(strength: BackdropStrength) {
+        context.dataStore.edit { it[Keys.backdropStrength] = strength.name }
     }
 }

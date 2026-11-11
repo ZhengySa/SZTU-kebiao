@@ -2,12 +2,20 @@ package com.classflow.timetable.domain.imports
 
 import com.classflow.timetable.domain.model.ImportSourceType
 
-/** 导入解析出来的一个上课时段。周次是具体周号集合，写入时再转成位图。 */
+/**
+ * 导入解析出来的一个上课时段。周次是具体周号集合，写入时再转成位图。
+ *
+ * [location] 是这个时段**自己**的教室，不是课程级的。
+ * 一门课常常周一在 C-5-215、周四在 D-3-321，
+ * 把教室只挂在课程上（拼成 "C-5-215 / D-3-321"）就等于把对应关系丢了，
+ * 学生看到三个时间三个教室，根本不知道哪个时间去哪儿。
+ */
 data class ImportedSession(
     val dayOfWeek: Int,
     val startSlot: Int,
     val endSlot: Int,
     val weeks: Set<Int>,
+    val location: String? = null,
 )
 
 /** 导入解析出来的一门课（同名课程的多个时段已经聚合到一起）。 */

@@ -48,6 +48,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import com.classflow.timetable.domain.model.BackdropStrength
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -96,6 +100,10 @@ data class GlassPalette(
             // 取中间——很浅的蓝紫，让玻璃"有东西可透"，但不抢文字的戏。
             listOf(Color(0xFFEDF1FE), Color(0xFFF2ECFD), Color(0xFFE9F6FA))
         }
+
+    /** 背景图上的压制色：亮色用白、深色用黑，靠它兜住整屏对比度。 */
+    val scrimColor: Color
+        get() = if (isDark) Color.Black else Color.White
 
     val blobs: List<Pair<Color, Float>>
         get() = if (isDark) {
@@ -253,11 +261,17 @@ fun LiquidBackdrop(
     /**
      * 用户自选的背景图；null 时用默认渐变。
      *
-     * 有图时不是直接把图画上去就完事：中间要压一层"磨砂"色的 scrim，
-     * 否则玻璃卡那点半透明白压不住照片的亮部，深色文字直接糊掉。
-     * 光斑也降到 38% 透明——留着是为了"液体"还在动，不是为了抢戏。
+     * 有图时不是直接把图画上去就完事。照片和界面文字天生打架：
+     * 照片有亮部、有饱和色，而界面要求整屏对比度稳定。所以中间要过四道工序：
+     *   1. 模糊 —— 把细节抹掉，只留色块
+     *   2. 降饱和 —— 照片的红/绿会和课程色条撞色
+     *   3. 主题色罩 —— 把照片整体拉向 App 底色，看起来才像"底纹"而不是"壁纸"
+     *   4. scrim —— 对比度地板，低版本没有真模糊时全靠它
+     * 玻璃卡片本身也会跟着变实（见 [solidForBackdrop]）：
+     * "卡片半透明"和"花背景"这两件事没法同时又要好看又要清楚。
      */
     backdrop: ImageBitmap? = null,
+    strength: BackdropStrength = BackdropStrength.MEDIUM,
     content: @Composable BoxScope.() -> Unit,
 ) {
     // 背景漂移故意跑在 ~12fps：它一个来回要 40 多秒，每帧位移不到 3px，
@@ -275,6 +289,14 @@ fun LiquidBackdrop(
             delay(80)
         }
     }
+
+    val tone = remember(strength, palette.isDark) { strength.toneFor(palette.isDark) }
+    // 有背景时卡片必须更实：半透明的白卡放在照片上，卡里的深色字就只剩灰度差，
+    // 屏幕一亮、角度一偏，整屏都在发光，谁也看不清。
+    val effectivePalette = remember(palette, backdrop != null) {
+        if (backdrop != null) palette.solidForBackdrop() else palette
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -285,34 +307,38 @@ fun LiquidBackdrop(
                 bitmap = backdrop,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+                colorFilter = ColorFilter.colorMatrix(
+                    ColorMatrix().apply { setToSaturation(tone.saturation) },
+                ),
                 modifier = Modifier
                     .fillMaxSize()
-                    // 真模糊（RenderEffect）只在 Android 12+ 生效，低版本会退化成清晰图。
-                    // 所以下面那层 scrim 不能省：它才是压住照片、保住文字对比度的底线。
-                    .blur(18.dp),
+                    // 真模糊（RenderEffect）只在 Android 12+ 生效，低版本会退化成清晰图，
+                    // 那时靠下面的色罩 + scrim 撑住可读性。
+                    .blur(tone.blurRadius, edgeTreatment = BlurredEdgeTreatment.Unbounded),
             )
+            // 主题色罩：把照片的颜色拉向 App 自己的底色。
+            // 少了这层，用户选一张暖橙色照片，整屏就是橙的，蓝色强调色立刻显脏。
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(palette.background[1].copy(alpha = tone.tintAlpha)),
+            )
+            // 对比度地板：上下边缘压得更狠一点，因为标题和底部导航都贴在那。
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            if (palette.isDark) {
-                                listOf(
-                                    Color.Black.copy(alpha = 0.72f),
-                                    Color.Black.copy(alpha = 0.84f),
-                                )
-                            } else {
-                                listOf(
-                                    Color.White.copy(alpha = 0.60f),
-                                    Color.White.copy(alpha = 0.72f),
-                                )
-                            },
+                            0f to palette.scrimColor.copy(alpha = tone.scrimEdge),
+                            0.35f to palette.scrimColor.copy(alpha = tone.scrimCenter),
+                            1f to palette.scrimColor.copy(alpha = tone.scrimEdge),
                         ),
                     ),
             )
         }
 
-        val blobAlpha = if (backdrop != null) 0.38f else 1f
+        // 有照片时光斑几乎全部让位：两套色彩叠在一起只会更花
+        val blobAlpha = if (backdrop != null) 0.18f else 1f
 
         BlobLayer(
             palette = palette,
@@ -352,11 +378,64 @@ fun LiquidBackdrop(
                 },
         )
 
-        CompositionLocalProvider(LocalGlassPalette provides palette) {
+        CompositionLocalProvider(LocalGlassPalette provides effectivePalette) {
             content()
         }
     }
 }
+
+/**
+ * 背景图的处理参数。按「淡 / 中 / 浓」三档给，用户自己找平衡。
+ *
+ * [scrimEdge] 比 [scrimCenter] 更重：标题、状态栏、底部导航都贴着上下边，
+ * 那两处必须更稳；中间可以松一点，不然整屏像糊了一层灰。
+ */
+private data class BackdropTone(
+    val blurRadius: Dp,
+    val saturation: Float,
+    val tintAlpha: Float,
+    val scrimEdge: Float,
+    val scrimCenter: Float,
+)
+
+private fun BackdropStrength.toneFor(isDark: Boolean): BackdropTone = when (this) {
+    BackdropStrength.LIGHT -> BackdropTone(
+        blurRadius = 26.dp,
+        saturation = 0.34f,
+        tintAlpha = if (isDark) 0.26f else 0.34f,
+        scrimEdge = if (isDark) 0.76f else 0.72f,
+        scrimCenter = if (isDark) 0.56f else 0.52f,
+    )
+    BackdropStrength.MEDIUM -> BackdropTone(
+        blurRadius = 20.dp,
+        saturation = 0.54f,
+        tintAlpha = if (isDark) 0.18f else 0.24f,
+        scrimEdge = if (isDark) 0.66f else 0.62f,
+        scrimCenter = if (isDark) 0.44f else 0.42f,
+    )
+    BackdropStrength.STRONG -> BackdropTone(
+        blurRadius = 12.dp,
+        saturation = 0.82f,
+        tintAlpha = if (isDark) 0.10f else 0.14f,
+        scrimEdge = if (isDark) 0.54f else 0.50f,
+        scrimCenter = if (isDark) 0.32f else 0.30f,
+    )
+}
+
+/**
+ * 有背景图时用的玻璃调色板：填充更实、描边更明显。
+ *
+ * 升多少是试出来的：亮色主题卡片原来 40% 白，透出来的照片亮部直接把深色字吃掉，
+ * 提到 80% 以上才稳；深色主题原来只有 8% 白，卡片边界全靠一根描边，
+ * 现在提到 16~24%，卡片才"浮"得起来。
+ */
+private fun GlassPalette.solidForBackdrop(): GlassPalette = copy(
+    glassFillTop = if (isDark) Color(0x3DFFFFFF) else Color(0xE6FFFFFF),
+    glassFill = if (isDark) Color(0x33FFFFFF) else Color(0xDBFFFFFF),
+    glassFillBottom = if (isDark) Color(0x29FFFFFF) else Color(0xCCFFFFFF),
+    glassBorderTop = if (isDark) Color(0x4DFFFFFF) else Color(0xF2FFFFFF),
+    glassBorderBottom = if (isDark) Color(0x14FFFFFF) else Color(0x33FFFFFF),
+)
 
 /** 背景漂移的归一化位置（0~1）。 */
 private data class Drift(val x: Float, val y: Float)

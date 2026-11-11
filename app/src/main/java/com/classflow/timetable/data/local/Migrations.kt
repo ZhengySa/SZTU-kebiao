@@ -40,3 +40,22 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         }
     }
 }
+
+/**
+ * 3 → 4：清掉课程级地点里的拼接串。
+ *
+ * 3 版之前，同步教务时把一门课所有时段的教室拼成一串塞进 default_location
+ * （「C-5-215 / C-5-215 / D-3-321」）。这条信息本身是错的 —— 它让三个时段
+ * 看起来都在这三个地方。真正的地点现在已经存进每个时段的 location_override，
+ * 但老数据的时段是空的，所以这里先把拼接串清掉，宁可显示「地点待填」，
+ * 也不给一个看着像答案的假答案。用户重新同步一次教务就会补全。
+ *
+ * 判据用「包含 ' / '」：课程地点只有多个才会被拼，单个教室不会带这个分隔符。
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "UPDATE course SET default_location = NULL WHERE default_location LIKE '% / %'",
+        )
+    }
+}

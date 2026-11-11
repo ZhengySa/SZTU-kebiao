@@ -276,9 +276,19 @@ private fun PreviewSection(
                         Text(course.name, style = MaterialTheme.typography.bodyMedium)
                         Text(
                             course.sessions.joinToString("；") { session ->
-                                "${dayOfWeekLabel(session.dayOfWeek)} " +
-                                    slotsLabelOf(session.startSlot, session.endSlot) +
-                                    " " + describeWeeks(session.weeks)
+                                // 地点跟在每个时段后面，不用「@」分隔就分不清
+                                // 哪个时间是哪间教室 —— 这正是导入前要确认的东西
+                                buildString {
+                                    append(dayOfWeekLabel(session.dayOfWeek))
+                                    append(' ')
+                                    append(slotsLabelOf(session.startSlot, session.endSlot))
+                                    append(' ')
+                                    append(describeWeeks(session.weeks))
+                                    session.location?.takeIf { it.isNotBlank() }?.let {
+                                        append(" @")
+                                        append(it)
+                                    }
+                                }
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,

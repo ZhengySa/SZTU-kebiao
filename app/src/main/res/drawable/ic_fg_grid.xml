@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  图标一：格 —— 3 条横线 + 2 条竖线，一个实心格。
+  课表最直白的抽象：横是节次，竖是星期，填上的那一格就是"有课"。
+  线条只留 3.5dp，去掉所有装饰，远看是一张排班表，近看还是个几何图形。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:strokeColor="#F5F7FA"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M26,34 H82 M26,54 H82 M26,74 H82 M44,24 V84 M64,24 V84" />
+
+    <path
+        android:fillColor="#6B8AFF"
+        android:pathData="M47,37 H61 V51 H47 Z" />
+</vector>

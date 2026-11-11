@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.SavedStateHandle
@@ -216,10 +217,22 @@ private fun SessionRow(session: CourseSession, detail: CourseDetail) {
                 text = "${dayOfWeekLabel(session.dayOfWeek)} · ${session.slotLabel}",
                 style = MaterialTheme.typography.titleSmall,
             )
+            // 时间和地点各占一行。挤在一行里用「·」隔开，
+            // 三个时段三间教室时读起来就是一串符号，根本对不上号。
             Text(
-                text = "$timeText · $location",
+                text = timeText,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = location,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = if (session.locationOverride.isNullOrBlank() && detail.course.defaultLocation.isNullOrBlank()) {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                } else {
+                    MaterialTheme.colorScheme.onSurface
+                },
             )
             Text(
                 text = weeks,

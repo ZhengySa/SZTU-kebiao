@@ -88,6 +88,9 @@ class PrepareImportUseCase @Inject constructor(
             course.sessions.forEach { session ->
                 val importedMask = com.classflow.timetable.domain.model.WeekMask.fromWeeks(session.weeks)
                 existing.forEach { current ->
+                    // 同名就是同一门课：重新同步 / 重新导入时，自己和自己必然重叠，
+                    // 报出来只会让人以为课表冲突了，实际上什么都没变
+                    if (current.courseName == course.name) return@forEach
                     val slotOverlap = session.startSlot <= current.endSlot && current.startSlot <= session.endSlot
                     if (current.dayOfWeek == session.dayOfWeek &&
                         slotOverlap &&

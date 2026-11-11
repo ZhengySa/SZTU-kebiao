@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  图标三：条 —— 三条粗细相同的横杠，长度递减，中间那条用强调色。
+  像一天的课程表被抽象成三段时间，也像音量/进度条。
+  线条全部 round cap，端点是圆的，整体更软。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:strokeColor="#14161C"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:pathData="M30,34 H66" />
+
+    <path
+        android:strokeColor="#3A5BF0"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:pathData="M30,54 H78" />
+
+    <path
+        android:strokeColor="#14161C"
+        android:strokeWidth="9"
+        android:strokeLineCap="round"
+        android:pathData="M30,74 H72" />
+</vector>

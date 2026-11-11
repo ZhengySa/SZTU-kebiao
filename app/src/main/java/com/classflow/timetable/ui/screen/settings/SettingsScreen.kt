@@ -45,6 +45,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.res.painterResource
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import com.classflow.timetable.ui.icon.CustomIconPin
+import com.classflow.timetable.ui.icon.LauncherIcon
+import com.classflow.timetable.ui.icon.LauncherIconManager
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -55,6 +63,7 @@ import com.classflow.timetable.BuildConfig
 import com.classflow.timetable.core.time.AppClock
 import com.classflow.timetable.domain.model.AppSettings
 import com.classflow.timetable.domain.model.Semester
+import com.classflow.timetable.domain.model.BackdropStrength
 import com.classflow.timetable.domain.model.ThemeMode
 import com.classflow.timetable.domain.repository.SettingsRepository
 import com.classflow.timetable.domain.repository.TimetableRepository
@@ -143,6 +152,25 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun setBackdropStrength(strength: BackdropStrength) {
+        viewModelScope.launch { settingsRepository.setBackdropStrength(strength) }
+    }
+
+    /** 桌面图标：alias 的启用状态存在 PackageManager 里，不在 DataStore，所以要现查一遍。 */
+    private val _launcherIcon = MutableStateFlow(LauncherIconManager.current(context))
+    val launcherIcon: StateFlow<LauncherIcon> = _launcherIcon.asStateFlow()
+
+    fun setLauncherIcon(icon: LauncherIcon) {
+        if (LauncherIconManager.apply(context, icon)) {
+            _launcherIcon.value = icon
+        }
+    }
+
+    /** 自定义图标走桌面快捷方式：Android 不允许运行时替换应用图标本身。 */
+    fun pinCustomIcon(uri: android.net.Uri) {
+        viewModelScope.launch { CustomIconPin.pin(context, uri) }
+    }
+
     fun hasNotificationPermission(): Boolean = NotificationHelper.hasPermission(context)
 
     fun currentWeekLabel(semester: Semester?): String {
@@ -179,6 +207,11 @@ fun SettingsScreen(
     val backdropPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
     ) { uri -> if (uri != null) viewModel.setBackdrop(uri) }
+
+    val launcherIcon by viewModel.launcherIcon.collectAsStateWithLifecycle()
+    val iconPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> if (uri != null) viewModel.pinCustomIcon(uri) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -356,6 +389,36 @@ fun SettingsScreen(
                     last = !hasBackdrop,
                 )
                 if (hasBackdrop) {
+                    // 照片和文字天生打架，三档交给用户自己找平衡：
+                    // 觉得花就调「淡」，觉得可惜了照片就调「浓」。
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 18.dp, end = 18.dp, bottom = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = "背景强度",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = palette.textPrimary,
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BackdropStrength.entries.forEach { strength ->
+                                GlassChip(
+                                    label = strength.label,
+                                    selected = settings.backdropStrength == strength,
+                                    palette = palette,
+                                ) {
+                                    viewModel.setBackdropStrength(strength)
+                                }
+                            }
+                        }
+                        Text(
+                            text = "越淡越清楚，越浓越能看清照片本身。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = palette.textTertiary,
+                        )
+                    }
                     GlassRow(
                         palette = palette,
                         title = "恢复默认背景",
@@ -364,6 +427,49 @@ fun SettingsScreen(
                         last = true,
                     )
                 }
+            }
+
+            GlassSection(palette, "桌面图标") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    LauncherIcon.entries.forEach { icon ->
+                        IconOption(
+                            icon = icon,
+                            selected = launcherIcon == icon,
+                            palette = palette,
+                            onClick = { viewModel.setLauncherIcon(icon) },
+                        )
+                    }
+                }
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 18.dp),
+                    color = palette.textPrimary.copy(alpha = 0.06f),
+                )
+                GlassRow(
+                    palette = palette,
+                    title = "自定义图标",
+                    subtitle = "从相册选一张图当图标",
+                    onClick = {
+                        iconPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                    last = true,
+                )
+                // 说明写成正文而不是一行可点条目：它没有下一步动作，
+                // 做成带箭头的条目只会让人反复去点，然后发现点了没反应。
+                Text(
+                    text = "Android 不允许直接换掉应用图标本身，所以自定义会生成一个桌面快捷方式。" +
+                        "换任意一款图标后，桌面都可能重排一次，把图标拖回原处就行。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = palette.textTertiary,
+                    modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 16.dp),
+                )
             }
 
             GlassSection(palette, "其他") {
@@ -435,6 +541,57 @@ private fun GlassSection(
         GlassCard(Modifier.fillMaxWidth(), cornerRadius = 22.dp) {
             Column(content = content)
         }
+    }
+}
+
+/**
+ * 图标选项：底色方块 + 前景 vector。
+ *
+ * 预览是「拼」出来的，不是直接画 adaptive-icon —— 见 [LauncherIcon.foregroundRes] 的注释。
+ * 比例和真实图标一致（前景 108 视图里图形占 60），所以预览看起来多大，桌面就是多大。
+ */
+@Composable
+private fun IconOption(
+    icon: LauncherIcon,
+    selected: Boolean,
+    palette: GlassPalette,
+    onClick: () -> Unit,
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Column(
+        modifier = Modifier
+            .width(60.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(52.dp)
+                .clip(shape)
+                .background(Color(icon.backgroundColor))
+                .then(
+                    if (selected) {
+                        Modifier.border(2.dp, palette.accent, shape)
+                    } else {
+                        Modifier.border(1.dp, palette.glassBorderBottom, shape)
+                    },
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Image(
+                painter = painterResource(icon.foregroundRes),
+                contentDescription = icon.label,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        Text(
+            text = icon.label,
+            fontSize = 11.sp,
+            color = if (selected) palette.accent else palette.textSecondary,
+        )
     }
 }
 

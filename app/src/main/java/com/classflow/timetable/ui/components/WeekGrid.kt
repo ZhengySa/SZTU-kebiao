@@ -313,24 +313,26 @@ private fun DayColumn(
                         .fillMaxWidth()
                         .padding(start = 2.5.dp, end = 1.5.dp, top = 1.5.dp, bottom = 1.dp),
                 ) {
-                    // 课程名是唯一必须读的内容，给满它；教室在横向极窄的一列里
-                    // 只能显示两三个字，价值低于它占掉的那一行，所以只在大块里出现。
+                    // 课程名优先，但教室不能全省：一门课在不同日子上换教室时，
+                    // 周课表是学生唯一能一眼扫清"今天去哪"的地方。
+                    // 2 节连上（第 6-7 节这种）就够放一行教室，所以门槛放到 span >= 2。
                     Text(
                         text = course.name,
                         fontSize = 9.sp,
                         lineHeight = 10.sp,
                         fontWeight = FontWeight.Medium,
                         color = palette.textPrimary,
+                        maxLines = 2,
                         overflow = TextOverflow.Clip,
                     )
                     val location = course.location?.takeIf { it.isNotBlank() }
-                    if (location != null && span >= 3) {
+                    if (location != null && span >= 2) {
                         Text(
                             text = location,
                             fontSize = 7.5.sp,
                             lineHeight = 8.5.sp,
-                            color = palette.textSecondary.copy(alpha = 0.85f),
-                            maxLines = 2,
+                            color = palette.textSecondary.copy(alpha = 0.9f),
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
                     }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  图标二：钟 —— 一个圆环 + 两根直角指针。
+  极简到只剩轮廓：没有刻度、没有秒针、没有数字。
+  圆用两段半圆弧拼成，而不是 A...Z 画整圆，终点重合会在圆上留一个小缺口。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M54,27 A27,27 0 1,1 54,81 A27,27 0 1,1 54,27" />
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M54,54 V38 M54,54 H68" />
+</vector>

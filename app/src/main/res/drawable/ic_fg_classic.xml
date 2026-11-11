@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 图标六：课 —— 原来那版课表，保留给习惯它的用户。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,26 L78,26 L78,82 L30,82 Z" />
+    <path
+        android:fillColor="#3A5BF0"
+        android:pathData="M30,26 L78,26 L78,40 L30,40 Z" />
+    <path
+        android:fillColor="#3A5BF0"
+        android:pathData="M36,48 L50,48 L50,54 L36,54 Z" />
+    <path
+        android:fillColor="#B5D4F4"
+        android:pathData="M55,48 L72,48 L72,54 L55,54 Z" />
+    <path
+        android:fillColor="#B5D4F4"
+        android:pathData="M36,60 L50,60 L50,66 L36,66 Z" />
+    <path
+        android:fillColor="#3A5BF0"
+        android:pathData="M55,60 L72,60 L72,66 L55,66 Z" />
+    <path
+        android:fillColor="#B5D4F4"
+        android:pathData="M36,72 L50,72 L50,78 L36,78 Z" />
+</vector>

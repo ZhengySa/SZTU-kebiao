@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  图标五：点 —— 一个圆环套一个实心圆。
+  全系列里最抽象的一款：不放任何"课"的意象，只做形状。
+  想要一个不解释自己是什么的图标时选它。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="4"
+        android:pathData="M54,27 A27,27 0 1,1 54,81 A27,27 0 1,1 54,27" />
+
+    <path
+        android:fillColor="#6B8AFF"
+        android:pathData="M54,43 A11,11 0 1,1 54,65 A11,11 0 1,1 54,43" />
+</vector>

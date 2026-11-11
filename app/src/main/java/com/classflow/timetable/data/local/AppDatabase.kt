@@ -12,6 +12,7 @@ import androidx.room.TypeConverters
  *
  * v2：course 增加 owner_key（见 MIGRATION_1_2），用于「情侣课表」。
  * v3：节次表换成学校真实作息 15 节（见 MIGRATION_2_3），修掉晚课下课时间算错的问题。
+ * v4：清掉课程级地点里的拼接串（见 MIGRATION_3_4），地点改为按时段存。
  */
 @Database(
     entities = [
@@ -21,7 +22,7 @@ import androidx.room.TypeConverters
         CourseEntity::class,
         CourseSessionEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

@@ -30,7 +30,11 @@ object CsvParser {
 
     fun parse(text: String, semester: Semester): ParseResult {
         val warnings = mutableListOf<String>()
-        val rows = text.replace("\r\n", "\n")
+        // Excel「另存为 CSV」默认带 UTF-8 BOM，不去掉的话第一个表头会变成
+        // "\uFEFF课程名"，别名一条都匹配不上，整份表格被判定为「表头不完整」。
+        // 中文 Windows 上导出的 CSV 几乎全带 BOM，这不是边缘情况。
+        val rows = text.removePrefix("\uFEFF")
+            .replace("\r\n", "\n")
             .replace('\r', '\n')
             .split('\n')
             .filter { it.isNotBlank() }
@@ -60,7 +64,6 @@ object CsvParser {
 
         val courses = linkedMapOf<String, MutableList<ImportedSession>>()
         val teachers = mutableMapOf<String, String?>()
-        val locations = mutableMapOf<String, String?>()
         val notes = mutableMapOf<String, String?>()
         var skipped = 0
 
@@ -98,24 +101,36 @@ object CsvParser {
                 semester.totalWeeks,
             )
 
+            // 地点跟着这一行走，不是跟着课程名走：
+            // 同一个课程名在 CSV 里可能是「周一 C-5-215 / 周三 D-3-321」两行，
+            // 只记第一次出现的地点，第二行就会显示成第一间教室。
             courses.getOrPut(name) { mutableListOf() } += ImportedSession(
                 dayOfWeek = day,
                 startSlot = startSlot,
                 endSlot = endSlot,
                 weeks = weeks,
+                location = cell("location"),
             )
             teachers.putIfAbsent(name, cell("teacher"))
-            locations.putIfAbsent(name, cell("location"))
             notes.putIfAbsent(name, cell("note"))
         }
 
         val result = courses.map { (name, sessions) ->
+            val distinctSessions = sessions.distinctBy {
+                listOf(it.dayOfWeek, it.startSlot, it.endSlot, it.weeks, it.location)
+            }
+            // 所有行同一间教室才写课程级地点，否则留空让每个时段自己说
+            val sharedLocation = distinctSessions
+                .map { it.location }
+                .distinct()
+                .singleOrNull()
+                ?.takeIf { distinctSessions.all { session -> session.location != null } }
             ImportedCourse(
                 name = name,
                 teacher = teachers[name],
-                location = locations[name],
+                location = sharedLocation,
                 note = notes[name],
-                sessions = sessions.distinctBy { listOf(it.dayOfWeek, it.startSlot, it.endSlot, it.weeks) },
+                sessions = distinctSessions,
             )
         }
 

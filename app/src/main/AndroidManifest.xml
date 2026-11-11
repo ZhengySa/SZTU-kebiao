@@ -25,17 +25,97 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.ClassFlow">
 
+        <!--
+          MainActivity 自己不带 LAUNCHER 入口。
+          桌面图标全部交给下面的 activity-alias —— 一个 alias 就是一款图标，
+          运行时用 PackageManager.setComponentEnabledSetting 只留一个启用。
+          如果这里也留着 intent-filter，切换图标之后桌面会出现两个入口。
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.ClassFlow"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 六款图标：格 / 钟 / 条 / 本 / 点 / 课。默认启用「格」。 -->
+        <activity-alias
+            android:name=".icon.IconGrid"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_grid"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".icon.IconClassic"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_classic"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".icon.IconClock"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_clock"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".icon.IconBars"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_bars"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".icon.IconBook"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_book"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".icon.IconDot"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_dot"
+            android:label="@string/app_name"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- 今日课表小组件（4x2 / 2x4 / 4x4 自适应） -->
         <receiver

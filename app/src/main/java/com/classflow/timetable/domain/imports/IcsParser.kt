@@ -38,7 +38,7 @@ object IcsParser {
         }
 
         val byName = linkedMapOf<String, MutableList<ImportedSession>>()
-        val meta = mutableMapOf<String, Pair<String?, String?>>() // name -> (teacher, location)
+        val meta = mutableMapOf<String, String?>() // name -> teacher
 
         events.forEachIndexed { index, block ->
             val props = parseProperties(block)
@@ -87,21 +87,33 @@ object IcsParser {
                     startSlot = slotRange.first,
                     endSlot = slotRange.second,
                     weeks = weeks,
+                    // 同一个课程名可能是好几个 VEVENT（不同星期、不同教室），
+                    // 地点必须跟着事件走，不能只记住最后一次见到的那个
+                    location = location,
                 )
             }
-            meta[summary] = teacher to location
+            meta[summary] = teacher
             if (index == 0 && description != null && description.length > 60) {
                 warnings += "描述较长，仅用于提取教师名，未写入备注"
             }
         }
 
         val courses = byName.map { (name, sessions) ->
-            val (teacher, location) = meta[name] ?: (null to null)
+            // 地点已经从 meta 挪到每个 session 上了：同名课程可能是好几个 VEVENT，
+            // 每个事件的 LOCATION 都可能不同（甚至缺一个），合并成一个必然出错。
+            val distinctSessions = sessions.distinctBy {
+                listOf(it.dayOfWeek, it.startSlot, it.endSlot, it.weeks, it.location)
+            }
+            val sharedLocation = distinctSessions
+                .map { it.location }
+                .distinct()
+                .singleOrNull()
+                ?.takeIf { distinctSessions.all { session -> session.location != null } }
             ImportedCourse(
                 name = name,
-                teacher = teacher,
-                location = location,
-                sessions = sessions.distinctBy { listOf(it.dayOfWeek, it.startSlot, it.endSlot, it.weeks) },
+                teacher = meta[name],
+                location = sharedLocation,
+                sessions = distinctSessions,
             )
         }
 

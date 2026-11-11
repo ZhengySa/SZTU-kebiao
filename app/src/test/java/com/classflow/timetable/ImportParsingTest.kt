@@ -229,6 +229,88 @@ class ImportParsingTest {
         assertThat(result.warnings.first()).contains("表头")
     }
 
+    // ---------- 一门课多个地点 ----------
+
+    @Test
+    fun `csv 同一门课不同行不同地点 各自带自己的教室`() {
+        val csv = """
+            课程名,教师,地点,星期,开始节,结束节,周次
+            传感器原理及应用,文克春,C-5-215,周三,1,2,1-17
+            传感器原理及应用,文克春,D-3-321,周二,5,6,11-15
+        """.trimIndent()
+
+        val result = CsvParser.parse(csv, semester)
+
+        assertThat(result.courses).hasSize(1)
+        val course = result.courses.first()
+        assertThat(course.sessions).hasSize(2)
+        assertThat(course.sessions.map { it.location }).containsExactly("C-5-215", "D-3-321")
+        // 两个时段两间教室，课程级地点必须留空，否则又会退化成「一串地点」
+        assertThat(course.location).isNull()
+    }
+
+    @Test
+    fun `csv 带 BOM 也能认表头`() {
+        // Excel 另存的 CSV 几乎都带 BOM，不带处理的话整份表格会被判成表头不完整
+        val csv = "﻿" + """
+            课程名,地点,星期,开始节,结束节,周次
+            高等数学,教三-201,周一,1,2,1-16
+        """.trimIndent()
+
+        val result = CsvParser.parse(csv, semester)
+
+        assertThat(result.courses).hasSize(1)
+        assertThat(result.courses.first().name).isEqualTo("高等数学")
+    }
+
+    @Test
+    fun `csv 全课同一间教室时 课程级地点才有值`() {
+        val csv = """
+            课程名,地点,星期,开始节,结束节,周次
+            高等数学,教三-201,周一,1,2,1-16
+            高等数学,教三-201,周三,3,4,1-16
+        """.trimIndent()
+
+        val course = CsvParser.parse(csv, semester).courses.first()
+
+        assertThat(course.sessions).hasSize(2)
+        assertThat(course.location).isEqualTo("教三-201")
+    }
+
+    @Test
+    fun `ics 同名课程的两个 VEVENT 各自保留自己的地点`() {
+        val ics = """
+            BEGIN:VCALENDAR
+            BEGIN:VEVENT
+            SUMMARY:传感器原理及应用
+            LOCATION:C-5-215
+            DTSTART:20260907T080000
+            DTEND:20260907T094000
+            RRULE:FREQ=WEEKLY;COUNT=6
+            END:VEVENT
+            BEGIN:VEVENT
+            SUMMARY:传感器原理及应用
+            LOCATION:D-3-321
+            DTSTART:20260909T100000
+            DTEND:20260909T114000
+            RRULE:FREQ=WEEKLY;COUNT=6
+            END:VEVENT
+            END:VCALENDAR
+        """.trimIndent()
+
+        val result = IcsParser.parse(ics, semester, slots)
+
+        assertThat(result.courses).hasSize(1)
+        val course = result.courses.first()
+        assertThat(course.sessions).hasSize(2)
+        val byLocation = course.sessions.associateBy { it.location }
+        assertThat(byLocation.keys).containsExactly("C-5-215", "D-3-321")
+        // 周一那节课在 C-5-215，周三那节在 D-3-321，不能对调
+        assertThat(byLocation.getValue("C-5-215").dayOfWeek).isEqualTo(1)
+        assertThat(byLocation.getValue("D-3-321").dayOfWeek).isEqualTo(3)
+        assertThat(course.location).isNull()
+    }
+
     // ---------- 周次表达式 ----------
 
     @Test

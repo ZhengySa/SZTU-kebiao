@@ -1,6 +1,7 @@
 package com.classflow.timetable.domain.repository
 
 import com.classflow.timetable.domain.model.AppSettings
+import com.classflow.timetable.domain.model.BackdropStrength
 import com.classflow.timetable.domain.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 
@@ -10,4 +11,5 @@ interface SettingsRepository {
     suspend fun setReminderEnabled(enabled: Boolean)
     suspend fun setReminderMinutes(minutes: Int)
     suspend fun setBackdropFile(name: String?)
+    suspend fun setBackdropStrength(strength: BackdropStrength)
 }

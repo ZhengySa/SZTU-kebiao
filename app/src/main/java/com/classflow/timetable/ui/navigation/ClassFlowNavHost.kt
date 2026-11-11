@@ -111,12 +111,17 @@ fun ClassFlowNavHost() {
     // 自定义背景图：整个 App 只解码一次，铺在 NavHost 底下所有页面共用
     val shell: ShellViewModel = hiltViewModel()
     val backdrop by shell.backdrop.collectAsStateWithLifecycle()
+    val shellSettings by shell.settings.collectAsStateWithLifecycle()
 
     val onTabRoutes = BOTTOM_ITEMS.any { item ->
         currentDestination?.hierarchy?.any { it.route == item.route } == true
     }
 
-    LiquidBackdrop(palette = palette, backdrop = backdrop) {
+    LiquidBackdrop(
+        palette = palette,
+        backdrop = backdrop,
+        strength = shellSettings.backdropStrength,
+    ) {
         Scaffold(
             containerColor = Color.Transparent,
             // 外层只管底部悬浮条；系统栏内边距交给各页面自己处理，

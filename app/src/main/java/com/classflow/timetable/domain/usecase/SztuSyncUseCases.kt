@@ -7,7 +7,6 @@ import com.classflow.timetable.data.remote.sztu.ZfKbParser
 import com.classflow.timetable.domain.imports.ImportOutcome
 import com.classflow.timetable.domain.imports.ImportPreview
 import com.classflow.timetable.domain.imports.ImportedCourse
-import com.classflow.timetable.domain.imports.ImportedSession
 import com.classflow.timetable.domain.model.ImportMode
 import com.classflow.timetable.domain.model.OwnerKey
 import com.classflow.timetable.domain.model.TimeSlot
@@ -111,31 +110,7 @@ class SztuSyncUseCase @Inject constructor(
     }
 
     private fun toImportedCourses(timetable: ZfKbParser.ZfTimetable): List<ImportedCourse> =
-        timetable.entries
-            .groupBy { it.name }
-            .map { (name, entries) ->
-                val sessions = entries
-                    .map {
-                        ImportedSession(
-                            dayOfWeek = it.dayOfWeek,
-                            startSlot = it.startSlot,
-                            endSlot = it.endSlot,
-                            weeks = it.weeks,
-                        )
-                    }
-                    .distinctBy { "${it.dayOfWeek}-${it.startSlot}-${it.endSlot}-${it.weeks.sorted()}" }
-
-                ImportedCourse(
-                    name = name,
-                    teacher = entries.mapNotNull { it.teacher }.distinct().joinToString("/").ifBlank { null },
-                    location = entries.mapNotNull { it.room }.distinct().joinToString(" / ").ifBlank { null },
-                    note = entries.mapNotNull { it.className }.distinct()
-                        .joinToString("、", prefix = "教学班：")
-                        .takeIf { entries.any { e -> e.className != null } },
-                    sessions = sessions,
-                )
-            }
-            .filter { it.sessions.isNotEmpty() }
+        SztuCourseAggregator.aggregate(timetable.entries)
 
     /** `2026-2027-1` → `2026-2027 学年 第 1 学期` */
     private fun semesterTitle(key: String): String {
