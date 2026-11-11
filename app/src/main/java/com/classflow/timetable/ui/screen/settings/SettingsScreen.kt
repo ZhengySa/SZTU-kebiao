@@ -3,6 +3,7 @@ package com.classflow.timetable.ui.screen.settings
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +51,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.classflow.timetable.BuildConfig
 import com.classflow.timetable.core.time.AppClock
 import com.classflow.timetable.domain.model.AppSettings
 import com.classflow.timetable.domain.model.Semester
@@ -57,6 +59,7 @@ import com.classflow.timetable.domain.model.ThemeMode
 import com.classflow.timetable.domain.repository.SettingsRepository
 import com.classflow.timetable.domain.repository.TimetableRepository
 import com.classflow.timetable.domain.usecase.WeekResolver
+import com.classflow.timetable.data.local.BackdropStore
 import com.classflow.timetable.reminder.NotificationHelper
 import com.classflow.timetable.reminder.ReminderScheduler
 import com.classflow.timetable.ui.theme.GlassCard
@@ -124,6 +127,22 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /** 把用户选的图存进私有目录再写设置：content:// 的授权活不过这次进程。 */
+    fun setBackdrop(uri: android.net.Uri) {
+        viewModelScope.launch {
+            if (BackdropStore.save(context, uri)) {
+                settingsRepository.setBackdropFile(BackdropStore.FILE_NAME)
+            }
+        }
+    }
+
+    fun clearBackdrop() {
+        viewModelScope.launch {
+            BackdropStore.clear(context)
+            settingsRepository.setBackdropFile(null)
+        }
+    }
+
     fun hasNotificationPermission(): Boolean = NotificationHelper.hasPermission(context)
 
     fun currentWeekLabel(semester: Semester?): String {
@@ -155,6 +174,11 @@ fun SettingsScreen(
     val sztuSemester by viewModel.sztuSemesterName.collectAsStateWithLifecycle()
     val palette = LocalGlassPalette.current
     var permissionHint by remember { mutableStateOf(false) }
+
+    val hasBackdrop = settings.backdropFile != null
+    val backdropPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> if (uri != null) viewModel.setBackdrop(uri) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
@@ -316,11 +340,35 @@ fun SettingsScreen(
                         viewModel.setThemeMode(ThemeMode.DARK)
                     }
                 }
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 18.dp),
+                    color = palette.textPrimary.copy(alpha = 0.06f),
+                )
+                GlassRow(
+                    palette = palette,
+                    title = "自定义背景",
+                    subtitle = if (hasBackdrop) "已设置 · 点按更换图片" else "选一张照片垫在玻璃下面",
+                    onClick = {
+                        backdropPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                    last = !hasBackdrop,
+                )
+                if (hasBackdrop) {
+                    GlassRow(
+                        palette = palette,
+                        title = "恢复默认背景",
+                        subtitle = "回到渐变 + 光斑",
+                        onClick = viewModel::clearBackdrop,
+                        last = true,
+                    )
+                }
             }
 
             GlassSection(palette, "其他") {
                 GlassRow(palette, "隐私说明", "数据存在哪、发去哪", onOpenPrivacy)
-                GlassRow(palette, "关于", "版本 1.0.0", onOpenAbout, last = true)
+                GlassRow(palette, "关于", "版本 ${BuildConfig.VERSION_NAME}", onOpenAbout, last = true)
             }
         }
 }

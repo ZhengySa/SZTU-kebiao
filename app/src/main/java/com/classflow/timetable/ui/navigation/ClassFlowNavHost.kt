@@ -46,6 +46,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.classflow.timetable.ui.ShellViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -105,12 +108,15 @@ fun ClassFlowNavHost() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = backStackEntry?.destination
     val palette = LocalGlassPalette.current
+    // 自定义背景图：整个 App 只解码一次，铺在 NavHost 底下所有页面共用
+    val shell: ShellViewModel = hiltViewModel()
+    val backdrop by shell.backdrop.collectAsStateWithLifecycle()
 
     val onTabRoutes = BOTTOM_ITEMS.any { item ->
         currentDestination?.hierarchy?.any { it.route == item.route } == true
     }
 
-    LiquidBackdrop(palette = palette) {
+    LiquidBackdrop(palette = palette, backdrop = backdrop) {
         Scaffold(
             containerColor = Color.Transparent,
             // 外层只管底部悬浮条；系统栏内边距交给各页面自己处理，

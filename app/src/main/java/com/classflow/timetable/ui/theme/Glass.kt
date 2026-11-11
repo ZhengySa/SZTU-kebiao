@@ -1,6 +1,7 @@
 package com.classflow.timetable.ui.theme
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,14 +43,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -246,6 +250,14 @@ private fun Modifier.drawTopHighlight(cornerRadius: Dp): Modifier = drawBehind {
 fun LiquidBackdrop(
     palette: GlassPalette,
     modifier: Modifier = Modifier,
+    /**
+     * 用户自选的背景图；null 时用默认渐变。
+     *
+     * 有图时不是直接把图画上去就完事：中间要压一层"磨砂"色的 scrim，
+     * 否则玻璃卡那点半透明白压不住照片的亮部，深色文字直接糊掉。
+     * 光斑也降到 38% 透明——留着是为了"液体"还在动，不是为了抢戏。
+     */
+    backdrop: ImageBitmap? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     // 背景漂移故意跑在 ~12fps：它一个来回要 40 多秒，每帧位移不到 3px，
@@ -268,6 +280,40 @@ fun LiquidBackdrop(
             .fillMaxSize()
             .background(Brush.linearGradient(palette.background)),
     ) {
+        if (backdrop != null) {
+            Image(
+                bitmap = backdrop,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    // 真模糊（RenderEffect）只在 Android 12+ 生效，低版本会退化成清晰图。
+                    // 所以下面那层 scrim 不能省：它才是压住照片、保住文字对比度的底线。
+                    .blur(18.dp),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            if (palette.isDark) {
+                                listOf(
+                                    Color.Black.copy(alpha = 0.72f),
+                                    Color.Black.copy(alpha = 0.84f),
+                                )
+                            } else {
+                                listOf(
+                                    Color.White.copy(alpha = 0.60f),
+                                    Color.White.copy(alpha = 0.72f),
+                                )
+                            },
+                        ),
+                    ),
+            )
+        }
+
+        val blobAlpha = if (backdrop != null) 0.38f else 1f
+
         BlobLayer(
             palette = palette,
             blobs = listOf(
@@ -281,6 +327,7 @@ fun LiquidBackdrop(
                     // 放大一点，位移时不会露出边。
                     // 读 drift 必须写在 block 里面：写在组合里就等于每次更新都重组整棵树。
                     val d = drift.value
+                    alpha = blobAlpha
                     scaleX = 1.30f
                     scaleY = 1.30f
                     translationX = (d.x - 0.5f) * 130f
@@ -297,6 +344,7 @@ fun LiquidBackdrop(
                 .fillMaxSize()
                 .graphicsLayer {
                     val d = drift.value
+                    alpha = blobAlpha
                     scaleX = 1.24f
                     scaleY = 1.24f
                     translationX = (d.y - 0.5f) * -110f

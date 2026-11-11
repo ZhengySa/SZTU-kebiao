@@ -29,9 +29,31 @@ class ZfKbParserTest {
         assertEquals(15, timetable.slots.size)
         assertEquals((1..15).toList(), timetable.slots.map { it.index })
 
-        val first = timetable.slots.first()
-        assertEquals(8 * 60 + 30, first.startMinute)
-        assertEquals(9 * 60 + 55, first.endMinute)
+        fun slot(index: Int) = checkNotNull(timetable.slots.firstOrNull { it.index == index }) {
+            "缺少第 $index 节"
+        }
+
+        // 合并行要拆成每节自己的时间，不能两节共用整行区间
+        assertEquals(8 * 60 + 30, slot(1).startMinute)
+        assertEquals(9 * 60 + 10, slot(1).endMinute)
+        assertEquals(9 * 60 + 15, slot(2).startMinute)
+        assertEquals(9 * 60 + 55, slot(2).endMinute)
+
+        // 晚上连上两节没有课间：19:00-20:20 / 20:30-21:50
+        assertEquals(19 * 60, slot(11).startMinute)
+        assertEquals(19 * 60 + 40, slot(11).endMinute)
+        assertEquals(19 * 60 + 40, slot(12).startMinute)
+        assertEquals(20 * 60 + 20, slot(12).endMinute)
+
+        // 这条是老 bug 的正题：单上第 13 节是 21:10 下课，不是 21:50
+        assertEquals(20 * 60 + 30, slot(13).startMinute)
+        assertEquals(21 * 60 + 10, slot(13).endMinute)
+        assertEquals(21 * 60 + 10, slot(14).startMinute)
+        assertEquals(21 * 60 + 50, slot(14).endMinute)
+
+        // 第 15 节是傍晚单独一节，时间早于 11-14 节
+        assertEquals(18 * 60, slot(15).startMinute)
+        assertEquals(18 * 60 + 40, slot(15).endMinute)
     }
 
     @Test

@@ -88,8 +88,8 @@ object ZfKbParser {
             val endMin = timeMatch?.let { it.groupValues[3].toInt() * 60 + it.groupValues[4].toInt() }
 
             if (startMin != null && endMin != null) {
-                for (i in rowStart..rowEnd) {
-                    slots[i] = ZfSlot(i, startMin, endMin, sectionOf(startMin))
+                splitRow(rowStart, rowEnd, startMin, endMin).forEach { (index, range) ->
+                    slots[index] = ZfSlot(index, range.first, range.second, sectionOf(range.first))
                 }
             }
 
@@ -249,4 +249,47 @@ object ZfKbParser {
         startMinute < 18 * 60 -> SlotSection.AFTERNOON
         else -> SlotSection.EVENING
     }
+
+    /**
+     * 教务课表把相邻小节压成一行：「第11 12节 19:00-20:20」「第13 14节 20:30-21:50」。
+     *
+     * 以前两节都直接抄这行的时间，于是单上第 13 节的课会显示成 20:30-**21:50** ——
+     * 把第 14 节的时间也算进去了。真实是第 13 节 20:30-21:10 就下课。
+     *
+     * 学校每节 40 分钟，整行时长减去每节课剩下的就是课间，均摊到节与节之间：
+     *   19:00-20:20（80 分钟 / 2 节）→ 19:00-19:40、19:40-20:20，连着上，没课间
+     *   08:30-09:55（85 分钟 / 2 节）→ 08:30-09:10、09:15-09:55，中间 5 分钟
+     * 万一遇到总时长凑不满 40×节数 的作息，退回平均分配，保证不崩也不越界。
+     */
+    private fun splitRow(
+        first: Int,
+        last: Int,
+        startMin: Int,
+        endMin: Int,
+    ): List<Pair<Int, Pair<Int, Int>>> {
+        val count = (last - first + 1).coerceAtLeast(1)
+        if (count == 1) return listOf(first to (startMin to endMin))
+
+        val span = (endMin - startMin).coerceAtLeast(count)
+        val perSlot: Int
+        val gap: Int
+        if (span >= PER_SLOT_MINUTES * count) {
+            perSlot = PER_SLOT_MINUTES
+            gap = (span - perSlot * count) / (count - 1)
+        } else {
+            perSlot = span / count
+            gap = 0
+        }
+
+        val result = ArrayList<Pair<Int, Pair<Int, Int>>>(count)
+        var cursor = startMin
+        for (index in first..last) {
+            result += index to (cursor to (cursor + perSlot))
+            cursor += perSlot + gap
+        }
+        return result
+    }
+
+    /** 学校每节课 40 分钟（15 节的作息表，见 DefaultData.SLOT_SEEDS）。 */
+    private const val PER_SLOT_MINUTES = 40
 }

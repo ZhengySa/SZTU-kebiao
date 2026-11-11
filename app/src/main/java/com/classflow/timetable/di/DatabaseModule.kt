@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.classflow.timetable.data.local.AppDatabase
 import com.classflow.timetable.data.local.MIGRATION_1_2
+import com.classflow.timetable.data.local.MIGRATION_2_3
 import com.classflow.timetable.data.local.CourseDao
 import com.classflow.timetable.data.local.CourseSessionDao
 import com.classflow.timetable.data.local.ImportSourceDao
@@ -25,7 +26,7 @@ object DatabaseModule {
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "classflow.db")
             // 不添加 fallbackToDestructiveMigration：迁移失败必须报错而不是清库
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides

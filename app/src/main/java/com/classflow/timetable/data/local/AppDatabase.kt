@@ -11,6 +11,7 @@ import androidx.room.TypeConverters
  * 绝对禁止 fallbackToDestructiveMigration()——它会静默清空用户的课表。
  *
  * v2：course 增加 owner_key（见 MIGRATION_1_2），用于「情侣课表」。
+ * v3：节次表换成学校真实作息 15 节（见 MIGRATION_2_3），修掉晚课下课时间算错的问题。
  */
 @Database(
     entities = [
@@ -20,7 +21,7 @@ import androidx.room.TypeConverters
         CourseEntity::class,
         CourseSessionEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)

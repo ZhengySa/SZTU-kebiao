@@ -28,8 +28,8 @@ android {
         applicationId = "com.classflow.timetable"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
     }
@@ -68,6 +68,8 @@ android {
 
     buildFeatures {
         compose = true
+        // 设置页「关于」要显示版本号，别在界面里再手写一份字符串
+        buildConfig = true
     }
 
     packaging {

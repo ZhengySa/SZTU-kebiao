@@ -31,6 +31,7 @@ class SettingsRepositoryImpl @Inject constructor(
         val themeMode = stringPreferencesKey("theme_mode")
         val reminderEnabled = booleanPreferencesKey("reminder_enabled")
         val reminderMinutes = intPreferencesKey("reminder_minutes")
+        val backdropFile = stringPreferencesKey("backdrop_file")
     }
 
     override val settings: Flow<AppSettings> = context.dataStore.data
@@ -42,6 +43,7 @@ class SettingsRepositoryImpl @Inject constructor(
                     ?: ThemeMode.SYSTEM,
                 reminderEnabled = prefs[Keys.reminderEnabled] ?: true,
                 reminderMinutes = prefs[Keys.reminderMinutes] ?: 15,
+                backdropFile = prefs[Keys.backdropFile]?.takeIf { it.isNotBlank() },
             )
         }
 
@@ -55,5 +57,11 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setReminderMinutes(minutes: Int) {
         context.dataStore.edit { it[Keys.reminderMinutes] = minutes.coerceIn(0, 120) }
+    }
+
+    override suspend fun setBackdropFile(name: String?) {
+        context.dataStore.edit { prefs ->
+            if (name.isNullOrBlank()) prefs.remove(Keys.backdropFile) else prefs[Keys.backdropFile] = name
+        }
     }
 }

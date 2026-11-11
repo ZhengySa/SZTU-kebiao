@@ -9,4 +9,5 @@ interface SettingsRepository {
     suspend fun setThemeMode(mode: ThemeMode)
     suspend fun setReminderEnabled(enabled: Boolean)
     suspend fun setReminderMinutes(minutes: Int)
+    suspend fun setBackdropFile(name: String?)
 }

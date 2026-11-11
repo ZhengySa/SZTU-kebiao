@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CenterFocusStrong
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -39,6 +42,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -56,6 +60,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.classflow.timetable.R
 import com.classflow.timetable.domain.model.ZhongdeFloors
 import com.classflow.timetable.ui.theme.GlassPalette
@@ -82,7 +88,7 @@ fun MapScreen() {
     Column(Modifier.fillMaxSize()) {
         GlassScreenHeader(
             title = "校园地图",
-            subtitle = "双指缩放 · 拖动查看 · 双击复位",
+            subtitle = "点图全屏 · 双指缩放 · 双击复位",
             onBack = null,
         )
 
@@ -430,6 +436,9 @@ private fun MapTab(
  *
  * 手势用 [rememberTransformableState]：自带双指缩放 + 拖动，
  * 缩放到 1x 时把位移归零，避免图被拖出可视区。
+ *
+ * 卡片里的面积终究有限，所以点图（或右下角的全屏按钮）会打开 [FullscreenMapDialog]，
+ * 用整块屏幕看细节——楼层图上教室号那种字号，在半屏卡片里缩到 3x 也糊。
  */
 @Composable
 private fun ZoomableImage(
@@ -437,8 +446,9 @@ private fun ZoomableImage(
     ratio: Float,
     palette: GlassPalette,
 ) {
-    var scale by remember(resId) { androidx.compose.runtime.mutableFloatStateOf(1f) }
+    var scale by remember(resId) { mutableFloatStateOf(1f) }
     var offset by remember(resId) { mutableStateOf(Offset.Zero) }
+    var fullscreen by remember(resId) { mutableStateOf(false) }
 
     val transformState = rememberTransformableState { zoomChange, panChange, _ ->
         val newScale = (scale * zoomChange).coerceIn(1f, 6f)
@@ -459,6 +469,7 @@ private fun ZoomableImage(
                 .background(Color.White)
                 .pointerInput(resId) {
                     detectTapGestures(
+                        onTap = { fullscreen = true },
                         onDoubleTap = {
                             scale = 1f
                             offset = Offset.Zero
@@ -482,27 +493,164 @@ private fun ZoomableImage(
             )
         }
 
-        if (scale > 1.02f) {
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (scale > 1.02f) {
+                RoundIconButton(
+                    icon = Icons.Filled.CenterFocusStrong,
+                    description = "复位",
+                    tint = Color.White,
+                    background = palette.accent,
+                ) {
+                    scale = 1f
+                    offset = Offset.Zero
+                }
+            }
+            RoundIconButton(
+                icon = Icons.Filled.Fullscreen,
+                description = "全屏查看",
+                tint = Color.White,
+                background = palette.accent,
+            ) {
+                fullscreen = true
+            }
+        }
+    }
+
+    if (fullscreen) {
+        FullscreenMapDialog(resId = resId, onDismiss = { fullscreen = false })
+    }
+}
+
+@Composable
+private fun RoundIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    description: String,
+    tint: Color,
+    background: Color,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .size(34.dp)
+            .clip(RoundedCornerShape(50))
+            .background(background)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(icon, contentDescription = description, tint = tint, modifier = Modifier.size(17.dp))
+    }
+}
+
+/**
+ * 全屏看图。
+ *
+ * 黑底、图片 Fit 居中、最多放大 8 倍，双击复位，右上角关闭（返回键也能退）。
+ * 用 [Dialog] 而不是新开页面：看地图是「瞄一眼细节就回去」的动作，
+ * 走导航栈会打断当前的楼层/搜索状态。
+ */
+@Composable
+private fun FullscreenMapDialog(
+    @DrawableRes resId: Int,
+    onDismiss: () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+    ) {
+        var scale by remember(resId) { mutableFloatStateOf(1f) }
+        var offset by remember(resId) { mutableStateOf(Offset.Zero) }
+
+        val transformState = rememberTransformableState { zoomChange, panChange, _ ->
+            val newScale = (scale * zoomChange).coerceIn(1f, 8f)
+            scale = newScale
+            offset = if (newScale <= 1f) Offset.Zero else offset + panChange
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+        ) {
             Box(
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(10.dp)
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(palette.accent)
-                    .clickable {
-                        scale = 1f
-                        offset = Offset.Zero
-                    },
-                contentAlignment = Alignment.Center,
+                    .fillMaxSize()
+                    .pointerInput(resId) {
+                        detectTapGestures(
+                            // 双击在「放大 2.5 倍」和「复位」之间来回：手指比双指手势好学，
+                            // 而且一进全屏黑底上那条窄图，很多人根本不会想到要捏一下。
+                            onDoubleTap = {
+                                if (scale > 1.05f) {
+                                    scale = 1f
+                                    offset = Offset.Zero
+                                } else {
+                                    scale = 2.5f
+                                    offset = Offset.Zero
+                                }
+                            },
+                        )
+                    }
+                    .transformable(transformState),
             ) {
-                Icon(
-                    Icons.Filled.CenterFocusStrong,
-                    contentDescription = "复位",
-                    tint = Color.White,
-                    modifier = Modifier.size(17.dp),
+                androidx.compose.foundation.Image(
+                    painter = painterResource(resId),
+                    contentDescription = "地图全屏",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y,
+                        ),
                 )
             }
+
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                if (scale > 1.02f) {
+                    RoundIconButton(
+                        icon = Icons.Filled.CenterFocusStrong,
+                        description = "复位",
+                        tint = Color.White,
+                        background = Color.White.copy(alpha = 0.22f),
+                    ) {
+                        scale = 1f
+                        offset = Offset.Zero
+                    }
+                }
+                RoundIconButton(
+                    icon = Icons.Filled.Close,
+                    description = "关闭",
+                    tint = Color.White,
+                    background = Color.White.copy(alpha = 0.22f),
+                    onClick = onDismiss,
+                )
+            }
+
+            Text(
+                text = if (scale > 1.02f) "拖动查看 · 双击复位" else "双击放大 · 双指缩放 · 横屏更好看",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = 22.dp),
+            )
         }
     }
 }
