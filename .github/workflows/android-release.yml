@@ -85,10 +85,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat > release-notes.md <<NOTES
+          cat > release-notes.md <<'NOTES'
           ## 安装
 
-          1. 点下面 **Assets** 里的 `ClassFlow-v${VERSION}.apk` 下载到手机
+          1. 点下面 **Assets** 里的 `ClassFlow-v__VERSION__.apk` 下载到手机
           2. 手机上点开安装，允许「未知来源」
           3. 首次启动按引导登录教务、导入课表
 
@@ -105,6 +105,8 @@ jobs:
           - 自签名包，不是应用商店版本。以后新版本可直接覆盖安装，数据不会丢。
           - 公文通走校内网地址，校外先连 VPN。
           NOTES
+          # heredoc 用引号版避免 shell 展开（上一版的反引号被当成命令替换，文件名直接没了）
+          sed -i "s/__VERSION__/${VERSION}/" release-notes.md
           gh release create "$GITHUB_REF_NAME" dist/*.apk \
             --title "ClassFlow $GITHUB_REF_NAME" \
             --notes-file release-notes.md
