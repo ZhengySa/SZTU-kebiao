@@ -128,3 +128,21 @@ adb install -r D:\xiangmu\app\build\outputs\apk\debug\app-debug.apk
 ```
 
 如果以后要装 SDK Platform 35/36，需要先补 `cmdline-tools`，再 `sdkmanager "platforms;android-36"`。
+
+## 七、发版（打 tag → CI 出包）
+
+推一个 `v*` 的 tag 就会触发 `.github/workflows/android-release.yml`：跑单元测试 → 出 release 包 → 建 Release 挂 APK。
+
+```
+# 1. 先改 app/build.gradle.kts 的 versionCode / versionName
+# 2. 写这一版的更新说明（可选，但强烈建议）
+#    文件名必须是 docs/releases/<tag>.md，例如 docs/releases/v1.0.3.md
+# 3. 提交后打 tag 并推送
+git commit -am "..." && git push origin main
+git tag -a v1.0.3 -m "ClassFlow v1.0.3" && git push origin v1.0.3
+```
+
+- 有 `docs/releases/<tag>.md` 就用它当 Release 说明；没有才退回通用模板
+  （通用模板里「这版有什么」是三句固定文字，看不出改了什么）。
+- 重打同一个 tag 不会失败：workflow 会检测到 Release 已存在，改用 `gh release edit` + 覆盖上传 APK。
+- 只出包不发版：在 Actions 页面手动 Run workflow，产物在 artifact 里。

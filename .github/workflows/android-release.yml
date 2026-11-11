@@ -85,7 +85,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cat > release-notes.md <<'NOTES'
+          # 通用说明：只在没写 docs/releases/<tag>.md 时兜底用
+          cat > notes-generic.md <<'NOTES'
           ## 安装
 
           1. 点下面 **Assets** 里的 `ClassFlow-v__VERSION__.apk` 下载到手机
@@ -105,8 +106,27 @@ jobs:
           - 自签名包，不是应用商店版本。以后新版本可直接覆盖安装，数据不会丢。
           - 公文通走校内网地址，校外先连 VPN。
           NOTES
-          # heredoc 用引号版避免 shell 展开（上一版的反引号被当成命令替换，文件名直接没了）
-          sed -i "s/__VERSION__/${VERSION}/" release-notes.md
-          gh release create "$GITHUB_REF_NAME" dist/*.apk \
-            --title "ClassFlow $GITHUB_REF_NAME" \
-            --notes-file release-notes.md
+          # heredoc 用引号版避免 shell 展开（反引号会被当成命令替换，文件名直接没了）
+          sed -i "s/__VERSION__/${VERSION}/" notes-generic.md
+
+          # 每个版本写 docs/releases/<tag>.md 当更新说明，比通用模板有用
+          VERSION_NOTES="docs/releases/${GITHUB_REF_NAME}.md"
+          if [ -f "$VERSION_NOTES" ]; then
+            echo "用版本说明：$VERSION_NOTES"
+            cp "$VERSION_NOTES" release-notes.md
+          else
+            echo "没有 $VERSION_NOTES，用通用说明"
+            cp notes-generic.md release-notes.md
+          fi
+
+          # 重打同一个 tag 时 release 可能已经存在：走编辑 + 覆盖上传，而不是失败
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" \
+              --title "ClassFlow $GITHUB_REF_NAME" \
+              --notes-file release-notes.md
+            gh release upload "$GITHUB_REF_NAME" dist/*.apk --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/*.apk \
+              --title "ClassFlow $GITHUB_REF_NAME" \
+              --notes-file release-notes.md
+          fi
