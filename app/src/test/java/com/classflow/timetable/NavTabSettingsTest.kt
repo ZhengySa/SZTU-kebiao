@@ -2,6 +2,7 @@ package com.classflow.timetable
 
 import com.classflow.timetable.domain.model.AppSettings
 import com.classflow.timetable.domain.model.NavTab
+import com.classflow.timetable.ui.navigation.route
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,15 +17,18 @@ import org.junit.Test
 class NavTabSettingsTest {
 
     @Test
-    fun `默认全开，和升级前一致`() {
+    fun `默认五个，番茄钟不占位`() {
         val settings = AppSettings()
-        assertEquals(NavTab.entries.toSet(), settings.bottomTabs)
+        assertEquals(NavTab.default.toSet(), settings.bottomTabs)
         assertEquals(NavTab.TODAY, settings.homeTab)
+        // 新加的入口默认不上底部栏，但它在设置里一定找得到
+        assertFalse(NavTab.POMODORO in settings.bottomTabs)
+        assertTrue(NavTab.SETTINGS in settings.bottomTabs)
     }
 
     @Test
     fun `没存过就退回默认`() {
-        assertEquals(NavTab.entries.toSet(), NavTab.decode(null))
+        assertEquals(NavTab.default.toSet(), NavTab.decode(null))
     }
 
     @Test
@@ -74,5 +78,15 @@ class NavTabSettingsTest {
         assertFalse(NavTab.WEEK.fixed)
         assertFalse(NavTab.BUS.fixed)
         assertFalse(NavTab.MAP.fixed)
+        assertFalse(NavTab.POMODORO.fixed)
+    }
+
+    @Test
+    fun `每个入口都有路由，收起来也不会没有去处`() {
+        // 枚举里加了一项却忘了配路由的话，设置页那一行点了会直接崩，
+        // 而这条断言不需要起模拟器就能挡住
+        val routes = NavTab.entries.map { it.route() }
+        assertEquals(NavTab.entries.size, routes.toSet().size)
+        assertTrue(routes.none { it.isBlank() })
     }
 }

@@ -17,6 +17,7 @@ object Routes {
     const val WIDGET_GUIDE = "widgetGuide"
     const val BUS = "bus"
     const val MAP = "map"
+    const val POMODORO = "pomodoro"
     const val GRADES = "grades"
     const val EXAMS = "exams"
     const val LUCK = "luck"

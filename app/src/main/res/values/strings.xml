@@ -8,4 +8,8 @@
     <!-- 课前提醒 -->
     <string name="reminder_channel_name">上课提醒</string>
     <string name="reminder_channel_description">上课前提醒你，可在这里关闭通知</string>
+
+    <!-- 番茄钟 -->
+    <string name="pomodoro_channel_name">番茄钟</string>
+    <string name="pomodoro_channel_description">专注或休息结束时提醒你，可单独关闭</string>
 </resources>

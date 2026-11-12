@@ -2,6 +2,7 @@ package com.classflow.timetable
 
 import android.app.Application
 import com.classflow.timetable.data.DataBootstrap
+import com.classflow.timetable.pomodoro.PomodoroEngine
 import com.classflow.timetable.reminder.NotificationHelper
 import com.classflow.timetable.reminder.ReminderScheduler
 import com.classflow.timetable.widget.WidgetRefreshScheduler
@@ -17,6 +18,17 @@ class ClassFlowApp : Application() {
 
     @Inject
     lateinit var bootstrap: DataBootstrap
+
+    /**
+     * 这里注入不是为了用它，而是为了让它**现在就活过来**。
+     *
+     * 番茄钟是 @Singleton，没人要它就不会被创建——而「进程刚被系统重启」这一刻，
+     * 正是最需要它把落盘的结束时刻接上的时候：用户上次按了开始就切出去了，
+     * 现在打开 App 却因为引擎没实例化而停在旧数字上，就会少一次结束提醒。
+     * 注入一次 = 构造一次 = recover() 跑一次，计时从真实时间继续。
+     */
+    @Inject
+    lateinit var pomodoroEngine: PomodoroEngine
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 

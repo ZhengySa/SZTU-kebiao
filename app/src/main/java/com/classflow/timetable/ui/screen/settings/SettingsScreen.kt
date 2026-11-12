@@ -92,8 +92,12 @@ class SettingsViewModel @Inject constructor(
     timetableRepository: TimetableRepository,
     private val clock: AppClock,
     private val accountStore: com.classflow.timetable.data.local.SztuAccountStore,
+    pomodoroEngine: com.classflow.timetable.pomodoro.PomodoroEngine,
     @ApplicationContext private val context: android.content.Context,
 ) : ViewModel() {
+
+    /** 番茄钟的时长显示在设置页那一行里，所以要跟着引擎的实时值走。 */
+    val pomodoro: StateFlow<com.classflow.timetable.pomodoro.PomodoroUiState> = pomodoroEngine.state
 
     val settings: StateFlow<AppSettings> = settingsRepository.settings.stateIn(
         viewModelScope,
@@ -207,13 +211,15 @@ fun SettingsScreen(
     onOpenWidgetGuide: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenAbout: () -> Unit,
-    /** 被收进设置里的入口：在「首页与底部栏」那一栏里点开。 */
+    onOpenPomodoro: () -> Unit,
+    /** 页面入口：点「页面与底部栏」里任意一行都能打开对应页面。 */
     onOpenTab: (NavTab) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
     val semester by viewModel.semester.collectAsStateWithLifecycle()
     val sztuSemester by viewModel.sztuSemesterName.collectAsStateWithLifecycle()
+    val pomodoro by viewModel.pomodoro.collectAsStateWithLifecycle()
     val palette = LocalGlassPalette.current
     var permissionHint by remember { mutableStateOf(false) }
 
@@ -300,6 +306,17 @@ fun SettingsScreen(
                 )
             }
 
+            GlassSection(palette, "专注") {
+                GlassRow(
+                    palette = palette,
+                    title = "番茄钟",
+                    subtitle = "专注 ${pomodoro.settings.focusMinutes} 分钟 + 休息 " +
+                        "${pomodoro.settings.breakMinutes} 分钟，结束时通知你",
+                    onClick = onOpenPomodoro,
+                    last = true,
+                )
+            }
+
             GlassSection(palette, "学业") {
                 GlassRow(
                     palette = palette,
@@ -324,7 +341,7 @@ fun SettingsScreen(
                 GlassRow(palette, "文件导入", "ICS 日历、CSV 表格，导入前可预览", onOpenImport, last = true)
             }
 
-            GlassSection(palette, "首页与底部栏") {
+            GlassSection(palette, "页面与底部栏") {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -366,7 +383,7 @@ fun SettingsScreen(
                 ) {
                     Text("底部栏按钮", color = palette.textPrimary, fontSize = 15.sp)
                     Text(
-                        "关掉的不会消失，收在这一栏里，点一下就能打开",
+                        "开关只管底部栏显不显示。页面本身永远在，点任意一行都能打开",
                         color = palette.textTertiary,
                         fontSize = 11.sp,
                     )
@@ -676,11 +693,12 @@ private fun IconOption(
 }
 
 /**
- * 底部栏开关的一行。
+ * 页面 / 底部栏开关的一行。
  *
- * 收起来之后这一行本身变成入口——用户把「巴士」从底部栏拿走，还能从设置里点开，
- * 否则那个功能就等于被删掉了。所以 [visible] 为 false 的行可以点，为 true 的不接点击，
- * 免得点一下想「看看」反而被导航走。
+ * 「关了底部栏按钮」和「页面打不开了」必须是两件事。这一行同时干这两件事：
+ * 点整行 → 打开那个页面（不论它在不在底部栏），点右边的开关 → 只控制底部栏显不显示。
+ * 1.0.5 只让「已收起」的行可点，等于给用户一条潜规则：先关掉才能点开，
+ * 反过来就点不动 —— 那行看起来就是个普通设置项，谁也不会想到它是个入口。
  */
 @Composable
 private fun NavSwitchRow(
@@ -691,13 +709,12 @@ private fun NavSwitchRow(
     onOpen: () -> Unit,
     last: Boolean,
 ) {
-    val openable = !tab.fixed && !visible
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (openable) Modifier.clickable(onClick = onOpen) else Modifier)
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+                .clickable(enabled = !tab.fixed, onClick = onOpen)
+                .padding(start = 18.dp, end = 8.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
@@ -713,11 +730,18 @@ private fun NavSwitchRow(
             }
             if (tab.fixed) {
                 Text("固定", color = palette.textTertiary, fontSize = 11.sp)
+                Spacer(Modifier.width(10.dp))
             } else {
                 Switch(
                     checked = visible,
                     onCheckedChange = onToggle,
                     colors = SwitchDefaults.colors(checkedTrackColor = palette.accent),
+                )
+                Icon(
+                    Icons.Filled.ChevronRight,
+                    contentDescription = null,
+                    tint = palette.textTertiary,
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }

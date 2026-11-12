@@ -50,14 +50,20 @@ enum class BackdropStrength {
 enum class NavTab(val label: String, val fixed: Boolean = false) {
     TODAY("今日"),
     WEEK("课表"),
+    POMODORO("番茄钟"),
     BUS("巴士"),
     MAP("地图"),
     SETTINGS("设置", fixed = true),
     ;
 
     companion object {
-        /** 默认全开，和 1.0.4 之前的样子一致，老用户升级上来不会觉得东西丢了。 */
-        val default: List<NavTab> get() = entries.toList()
+        /**
+         * 默认显示在底部栏的入口。
+         *
+         * 不是 `entries.toList()`：番茄钟是新加的，默认塞进去会让老用户升级完突然多一个按钮，
+         * 五个挤在一排也快到极限了。它可以随时在设置里打开，需要的人自己放上来。
+         */
+        val default: List<NavTab> get() = listOf(TODAY, WEEK, BUS, MAP, SETTINGS)
 
         fun safeOf(raw: String?): NavTab? = entries.firstOrNull { it.name == raw }
 

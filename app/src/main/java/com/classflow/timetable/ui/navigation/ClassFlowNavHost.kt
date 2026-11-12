@@ -61,6 +61,7 @@ import com.classflow.timetable.ui.screen.bus.BusScreen
 import com.classflow.timetable.ui.screen.map.MapScreen
 import com.classflow.timetable.ui.screen.nbw.NbwDetailScreen
 import com.classflow.timetable.ui.screen.nbw.NbwScreen
+import com.classflow.timetable.ui.screen.pomodoro.PomodoroScreen
 import com.classflow.timetable.ui.screen.detail.CourseDetailScreen
 import com.classflow.timetable.ui.screen.edit.CourseEditScreen
 import com.classflow.timetable.ui.screen.exam.ExamScreen
@@ -210,6 +211,16 @@ fun ClassFlowNavHost() {
                 }
 
                 composable(
+                    route = Routes.POMODORO,
+                    enterTransition = tabEnter,
+                    exitTransition = tabExit,
+                    popEnterTransition = tabEnter,
+                    popExitTransition = tabExit,
+                ) {
+                    PomodoroScreen(onBack = { navController.popBackStack() })
+                }
+
+                composable(
                     route = Routes.BUS,
                     enterTransition = tabEnter,
                     exitTransition = tabExit,
@@ -304,14 +315,14 @@ fun ClassFlowNavHost() {
                         onOpenWidgetGuide = { navController.navigate(Routes.WIDGET_GUIDE) },
                         onOpenPrivacy = { navController.navigate(Routes.PRIVACY) },
                         onOpenAbout = { navController.navigate(Routes.ABOUT) },
-                        // 收进设置里的入口：跳法和底部栏一样，回来时状态还在
+                        onOpenPomodoro = { navController.navigate(Routes.POMODORO) },
+                        // 从设置里点开一个页面：只往后压一层，**不做 popUpTo**。
+                        // 1.0.5 用的是底部栏那套「回到起始页再进去」，结果从设置点开、
+                        // 按返回时人已经被弹回首页了 —— 看起来就像「点开一下就被拿走」。
+                        // 现在返回一定回到设置，收起来的页面随时能再来一次。
                         onOpenTab = { tab ->
                             if (tab != NavTab.SETTINGS) {
-                                navController.navigate(tab.route()) {
-                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
+                                navController.navigate(tab.route()) { launchSingleTop = true }
                             }
                         },
                     )
