@@ -505,7 +505,16 @@ private fun DoneCard(
         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("导入完成", color = palette.textPrimary, style = MaterialTheme.typography.headlineSmall)
             Text(
-                "新增 ${state.outcome.insertedCourses} 门课 / ${state.outcome.insertedSessions} 个时段",
+                buildString {
+                    append("新增 ${state.outcome.insertedCourses} 门课 / ")
+                    append("${state.outcome.insertedSessions} 个时段")
+                    if (state.outcome.updatedCourses > 0) {
+                        append("，更新 ${state.outcome.updatedCourses} 门同名课")
+                    }
+                    if (state.outcome.repairedSessions > 0) {
+                        append("（其中 ${state.outcome.repairedSessions} 个时段补上了教室）")
+                    }
+                },
                 color = palette.textSecondary,
                 fontSize = 13.sp,
             )

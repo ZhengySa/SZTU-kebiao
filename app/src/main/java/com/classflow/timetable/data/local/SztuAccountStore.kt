@@ -42,6 +42,8 @@ class SztuAccountStore @Inject constructor(
         val SEMESTER = stringPreferencesKey("sztu_semester")
         val SEMESTER_NAME = stringPreferencesKey("sztu_semester_name")
         val LAST_SYNC = longPreferencesKey("sztu_last_sync")
+        // 上次尝试「自动补教室」的时间。补不上（比如教务自己没写教室）时别每次启动都去敲一遍
+        val ROOM_REPAIR_AT = longPreferencesKey("sztu_room_repair_at")
         // 情侣课表：只记「谁的课表 + 会话」，不记密码
         val PARTNER_USERNAME = stringPreferencesKey("sztu_partner_username")
         val PARTNER_COOKIES = stringPreferencesKey("sztu_partner_cookies")
@@ -71,6 +73,13 @@ class SztuAccountStore @Inject constructor(
     suspend fun savedCookies(): String = dataStore.data.first()[Keys.COOKIES].orEmpty()
 
     suspend fun savedSemester(): String = dataStore.data.first()[Keys.SEMESTER].orEmpty()
+
+    /** 上次尝试自动补教室的时间戳（0 表示从没试过）。 */
+    suspend fun lastRoomRepairAt(): Long = dataStore.data.first()[Keys.ROOM_REPAIR_AT] ?: 0L
+
+    suspend fun markRoomRepairAttempt(at: Long = System.currentTimeMillis()) {
+        dataStore.edit { prefs -> prefs[Keys.ROOM_REPAIR_AT] = at }
+    }
 
     suspend fun saveLogin(
         username: String,

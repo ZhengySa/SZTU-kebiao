@@ -196,10 +196,19 @@ fun ImportScreen(
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("导入完成", style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "新增 ${current.outcome.insertedCourses} 门课 / ${current.outcome.insertedSessions} 个时段" +
+                            buildString {
+                                append("新增 ${current.outcome.insertedCourses} 门课 / ")
+                                append("${current.outcome.insertedSessions} 个时段")
+                                if (current.outcome.updatedCourses > 0) {
+                                    append("，更新 ${current.outcome.updatedCourses} 门同名课")
+                                }
+                                if (current.outcome.repairedSessions > 0) {
+                                    append("（补了 ${current.outcome.repairedSessions} 个时段的教室）")
+                                }
                                 if (current.outcome.skippedCourses > 0) {
-                                    "，跳过 ${current.outcome.skippedCourses} 门（同名已存在或数据不完整）"
-                                } else "",
+                                    append("，跳过 ${current.outcome.skippedCourses} 门（同名且没有新信息，或数据不完整）")
+                                }
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         TextButton(onClick = onBack) { Text("回到课表") }

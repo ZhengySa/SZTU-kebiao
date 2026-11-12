@@ -1,6 +1,7 @@
 package com.classflow.timetable.ui.screen.detail
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -162,7 +163,11 @@ fun CourseDetailScreen(
             }
 
             items(current.sessions, key = { it.id }) { session ->
-                SessionRow(session = session, detail = current)
+                SessionRow(
+                    session = session,
+                    detail = current,
+                    onFixLocation = { onEdit(current.course.id) },
+                )
             }
 
             item {
@@ -198,7 +203,11 @@ fun CourseDetailScreen(
 }
 
 @Composable
-private fun SessionRow(session: CourseSession, detail: CourseDetail) {
+private fun SessionRow(
+    session: CourseSession,
+    detail: CourseDetail,
+    onFixLocation: () -> Unit,
+) {
     val startSlot: TimeSlot? = detail.timeSlots.firstOrNull { it.index == session.startSlot }
     val endSlot: TimeSlot? = detail.timeSlots.firstOrNull { it.index == session.endSlot }
     val timeText = if (startSlot != null && endSlot != null) {
@@ -206,9 +215,8 @@ private fun SessionRow(session: CourseSession, detail: CourseDetail) {
     } else {
         "时间未知"
     }
-    val location = session.locationOverride?.takeIf { it.isNotBlank() }
+    val known = session.locationOverride?.takeIf { it.isNotBlank() }
         ?: detail.course.defaultLocation?.takeIf { it.isNotBlank() }
-        ?: "地点待填"
     val weeks = session.weekMask.describe(detail.semester.totalWeeks)
 
     Card(shape = RoundedCornerShape(14.dp)) {
@@ -225,13 +233,19 @@ private fun SessionRow(session: CourseSession, detail: CourseDetail) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = location,
+                text = known ?: "地点待填 · 点这里补",
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
-                color = if (session.locationOverride.isNullOrBlank() && detail.course.defaultLocation.isNullOrBlank()) {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                // 空地点不再是死文字：点一下直接进编辑页，省得用户自己找入口
+                color = if (known == null) {
+                    MaterialTheme.colorScheme.primary
                 } else {
                     MaterialTheme.colorScheme.onSurface
+                },
+                modifier = if (known == null) {
+                    Modifier.clickable(onClick = onFixLocation)
+                } else {
+                    Modifier
                 },
             )
             Text(

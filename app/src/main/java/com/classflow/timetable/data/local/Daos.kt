@@ -138,6 +138,22 @@ interface CourseSessionDao {
     @Query("DELETE FROM course_session WHERE course_id = :courseId")
     suspend fun deleteByCourse(courseId: Long)
 
+    /**
+     * 还有多少时段的教室是空的。
+     *
+     * 只算导入进来的课（import_source_id 不为空）：手动建的课本来就可能不写地点，
+     * 那不是「老数据坏了」，不该触发自动修复。
+     */
+    @Query("""
+        SELECT COUNT(*) FROM course_session s
+        INNER JOIN course c ON c.id = s.course_id
+        WHERE c.semester_id = :semesterId AND c.owner_key = :ownerKey
+          AND c.import_source_id IS NOT NULL
+          AND (s.location_override IS NULL OR TRIM(s.location_override) = '')
+          AND (c.default_location IS NULL OR TRIM(c.default_location) = '')
+        """)
+    suspend fun countMissingLocation(semesterId: Long, ownerKey: String): Int
+
     @Query("""
         SELECT s.id AS session_id, s.course_id AS course_id, c.name AS course_name, c.teacher AS teacher,
                c.color_argb AS color_argb, s.day_of_week AS day_of_week, s.start_slot AS start_slot,

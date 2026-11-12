@@ -163,6 +163,16 @@ class CourseEditViewModel @Inject constructor(
     fun onNoteChange(value: String) = _state.update { it.copy(note = value) }
     fun onColorChange(value: Long) = _state.update { it.copy(colorArgb = value) }
 
+    /**
+     * 所有时段都在同一个教室时，别让人一格一格填。
+     *
+     * 做法是清掉每个时段自己的地点，让它们统一回落到「默认地点」——
+     * 而不是把地点抄进每一格。抄进去的话，之后改默认地点就会有格子不跟着变。
+     */
+    fun useLocationForAllSessions() = _state.update { state ->
+        state.copy(sessions = state.sessions.map { it.copy(locationOverride = "") })
+    }
+
     fun addSession() = _state.update {
         it.copy(sessions = it.sessions + SessionDraft(), sessionError = null)
     }
@@ -318,6 +328,15 @@ fun CourseEditScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                         )
+                        if (state.sessions.size > 1) {
+                            // 课表里大量课其实全学期同一个教室，逐格填是纯负担
+                            TextButton(
+                                onClick = viewModel::useLocationForAllSessions,
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                            ) {
+                                Text("所有时段都用这个地点", style = MaterialTheme.typography.labelLarge)
+                            }
+                        }
                         OutlinedTextField(
                             value = state.note,
                             onValueChange = viewModel::onNoteChange,

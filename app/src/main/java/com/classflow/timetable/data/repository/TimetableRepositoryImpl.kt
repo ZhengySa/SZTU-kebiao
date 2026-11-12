@@ -27,6 +27,7 @@ import com.classflow.timetable.domain.model.WeekMask
 import com.classflow.timetable.domain.model.WeekRuleType
 import com.classflow.timetable.domain.repository.TimetableRepository
 import com.classflow.timetable.domain.sync.ScheduleChangeNotifier
+import com.classflow.timetable.domain.usecase.SessionMergePlan
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
@@ -194,10 +195,10 @@ class TimetableRepositoryImpl @Inject constructor(
         val outcome = db.withTransaction {
             val now = System.currentTimeMillis()
 
-            val existingNames = if (mode == ImportMode.MERGE) {
-                courseDao.getAllInSemester(semesterId, ownerKey).map { it.name }.toSet()
+            val existingByName = if (mode == ImportMode.MERGE) {
+                courseDao.getAllInSemester(semesterId, ownerKey).associateBy { it.name }
             } else {
-                emptySet()
+                emptyMap()
             }
             if (mode == ImportMode.OVERWRITE) {
                 // 只清同一个归属的：给 TA 导入课表不能把自己的课删了
@@ -216,6 +217,8 @@ class TimetableRepositoryImpl @Inject constructor(
 
             var insertedCourses = 0
             var insertedSessions = 0
+            var updatedCourses = 0
+            var repairedSessions = 0
             var skipped = 0
 
             courses.forEachIndexed { index, imported ->
@@ -223,9 +226,77 @@ class TimetableRepositoryImpl @Inject constructor(
                     skipped++
                     return@forEachIndexed
                 }
-                if (mode == ImportMode.MERGE && imported.name in existingNames) {
-                    // 同名视为同一门课：合并模式不覆盖已有课程，避免重复导入变成两份
-                    skipped++
+
+                val existing = existingByName[imported.name]
+                if (existing != null) {
+                    // 同名视为同一门课：不新增课程，但要把这次拿到的信息补上去。
+                    //
+                    // 这条以前是「直接跳过」，于是 1.0.2 之前导入的课永远修不好：
+                    // 那些课的教室只存在课程级，时段的 location_override 是空的，
+                    // 用户重新同步多少次都还是「地点待填」，只能自己一个个手输。
+                    // 具体补哪些由 SessionMergePlan 决定（只补空地点、不删不改用户填过的）。
+                    val oldSessions = sessionDao.getByCourse(existing.id)
+                    val plan = SessionMergePlan.plan(
+                        existing = oldSessions.map {
+                            SessionMergePlan.Existing(
+                                id = it.id,
+                                dayOfWeek = it.dayOfWeek,
+                                startSlot = it.startSlot,
+                                endSlot = it.endSlot,
+                                location = it.locationOverride,
+                            )
+                        },
+                        incoming = imported.sessions,
+                    )
+                    var touched = false
+
+                    if (existing.teacher.isNullOrBlank() && !imported.teacher.isNullOrBlank()) {
+                        courseDao.update(existing.copy(teacher = imported.teacher, updatedAt = now))
+                        touched = true
+                    }
+
+                    plan.patches.forEach { patch ->
+                        oldSessions.firstOrNull { it.id == patch.sessionId }?.let { session ->
+                            sessionDao.update(
+                                session.copy(locationOverride = patch.location, updatedAt = now),
+                            )
+                            repairedSessions++
+                            touched = true
+                        }
+                    }
+
+                    plan.inserts.forEach { session ->
+                        // 教务新排出来的时段，上次导入时还没有
+                        sessionDao.insert(
+                            CourseSessionEntity(
+                                courseId = existing.id,
+                                dayOfWeek = session.dayOfWeek,
+                                startSlot = session.startSlot,
+                                endSlot = session.endSlot,
+                                weekRule = guessRule(session.weeks).name,
+                                weekMask = WeekMask.fromWeeks(session.weeks).bits,
+                                locationOverride = session.location,
+                                createdAt = now,
+                                updatedAt = now,
+                            )
+                        )
+                        insertedSessions++
+                        touched = true
+                    }
+
+                    // 所有时段现在地点一致的话，课程级地点也补上，列表页不用逐条翻
+                    val rooms = sessionDao.getByCourse(existing.id)
+                        .map { it.locationOverride?.trim()?.takeIf(String::isNotEmpty) }
+                    val shared = rooms.distinct().singleOrNull()
+                        ?.takeIf { rooms.isNotEmpty() && rooms.all { room -> room != null } }
+                    if (shared != null && existing.defaultLocation != shared) {
+                        courseDao.getById(existing.id)?.let { fresh ->
+                            courseDao.update(fresh.copy(defaultLocation = shared, updatedAt = now))
+                            touched = true
+                        }
+                    }
+
+                    if (touched) updatedCourses++ else skipped++
                     return@forEachIndexed
                 }
 
@@ -268,6 +339,8 @@ class TimetableRepositoryImpl @Inject constructor(
                 insertedSessions = insertedSessions,
                 skippedCourses = skipped,
                 mode = mode,
+                updatedCourses = updatedCourses,
+                repairedSessions = repairedSessions,
             )
         }
         notifier.notifyScheduleChanged()
@@ -281,6 +354,9 @@ class TimetableRepositoryImpl @Inject constructor(
 
     override suspend fun countCourses(semesterId: Long, ownerKey: String): Int =
         courseDao.countInSemester(semesterId, ownerKey)
+
+    override suspend fun countSessionsMissingLocation(semesterId: Long, ownerKey: String): Int =
+        sessionDao.countMissingLocation(semesterId, ownerKey)
 
     /** 只用于「编辑页回显」：把周次集合反推成最简单的那条规则。 */
     private fun guessRule(weeks: Set<Int>): WeekRuleType = when {

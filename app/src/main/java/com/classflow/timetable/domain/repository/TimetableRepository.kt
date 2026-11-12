@@ -56,7 +56,8 @@ interface TimetableRepository {
      * 把解析好的课程写入当前学期。
      *
      * [ImportMode.OVERWRITE] 会先清空该学期全部课程；
-     * [ImportMode.MERGE] 会跳过同名课程（同名视为同一门课，避免重复导入变成两份）。
+     * [ImportMode.MERGE] 不新增同名课程，而是就地把它缺的信息补上
+     * （教师、时段教室、新增时段），用户自己填过的地点和改过的周次不动。
      * 两种模式都会写一条 import_source 流水，便于日后追溯「这批课是哪来的」。
      */
     suspend fun importCourses(
@@ -73,4 +74,12 @@ interface TimetableRepository {
 
     /** 某个归属下有几门课，用来判断「TA 的课表导过没有」。 */
     suspend fun countCourses(semesterId: Long, ownerKey: String): Int
+
+    /**
+     * 有多少个时段的教室是空的（课程级地点也没有）。
+     *
+     * 专门给「老数据修教室」用：1.0.2 之前导入的课，教室只存在课程级，
+     * 迁移把拼接串清掉之后这些时段就彻底没地点了，需要知道还有多少要补。
+     */
+    suspend fun countSessionsMissingLocation(semesterId: Long, ownerKey: String): Int
 }

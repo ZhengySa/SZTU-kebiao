@@ -56,6 +56,10 @@ data class ImportOutcome(
     val skippedCourses: Int,
     val mode: com.classflow.timetable.domain.model.ImportMode,
     val warnings: List<String> = emptyList(),
+    /** 合并模式里被就地更新的已有课程数（不为 0 说明这次真的补到了东西）。 */
+    val updatedCourses: Int = 0,
+    /** 这次补回教室的时段数 —— 老数据只有课程级地点、时段是空的那种。 */
+    val repairedSessions: Int = 0,
 )
 
 /** 解析器的原始产出（还没做冲突检测）。 */
