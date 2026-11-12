@@ -53,6 +53,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.classflow.timetable.ui.icon.CustomIconPin
 import com.classflow.timetable.ui.icon.LauncherIcon
 import com.classflow.timetable.ui.icon.LauncherIconManager
+import com.classflow.timetable.ui.navigation.hint
+import com.classflow.timetable.ui.navigation.icon
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,6 +66,7 @@ import com.classflow.timetable.core.time.AppClock
 import com.classflow.timetable.domain.model.AppSettings
 import com.classflow.timetable.domain.model.Semester
 import com.classflow.timetable.domain.model.BackdropStrength
+import com.classflow.timetable.domain.model.NavTab
 import com.classflow.timetable.domain.model.ThemeMode
 import com.classflow.timetable.domain.repository.SettingsRepository
 import com.classflow.timetable.domain.repository.TimetableRepository
@@ -156,6 +159,14 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setBackdropStrength(strength) }
     }
 
+    fun setHomeTab(tab: NavTab) {
+        viewModelScope.launch { settingsRepository.setHomeTab(tab) }
+    }
+
+    fun setBottomTabVisible(tab: NavTab, visible: Boolean) {
+        viewModelScope.launch { settingsRepository.setBottomTabVisible(tab, visible) }
+    }
+
     /** 桌面图标：alias 的启用状态存在 PackageManager 里，不在 DataStore，所以要现查一遍。 */
     private val _launcherIcon = MutableStateFlow(LauncherIconManager.current(context))
     val launcherIcon: StateFlow<LauncherIcon> = _launcherIcon.asStateFlow()
@@ -196,6 +207,8 @@ fun SettingsScreen(
     onOpenWidgetGuide: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenAbout: () -> Unit,
+    /** 被收进设置里的入口：在「首页与底部栏」那一栏里点开。 */
+    onOpenTab: (NavTab) -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -309,6 +322,66 @@ fun SettingsScreen(
                 } ?: "未设置", onOpenSemester)
                 GlassRow(palette, "节次时间", "每节课的开始 / 结束时间", onOpenSlots)
                 GlassRow(palette, "文件导入", "ICS 日历、CSV 表格，导入前可预览", onOpenImport, last = true)
+            }
+
+            GlassSection(palette, "首页与底部栏") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("打开 App 先看哪一页", color = palette.textPrimary, fontSize = 15.sp)
+                        Text(
+                            "下次启动生效，不会把你现在停留的页面拽走",
+                            color = palette.textTertiary,
+                            fontSize = 11.sp,
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        NavTab.entries.filter { !it.fixed }.forEach { tab ->
+                            GlassChip(
+                                label = if (tab == NavTab.WEEK) "本周课表" else tab.label,
+                                selected = settings.homeTab == tab,
+                                palette = palette,
+                            ) { viewModel.setHomeTab(tab) }
+                        }
+                    }
+                }
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(start = 18.dp),
+                    color = palette.textPrimary.copy(alpha = 0.06f),
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Text("底部栏按钮", color = palette.textPrimary, fontSize = 15.sp)
+                    Text(
+                        "关掉的不会消失，收在这一栏里，点一下就能打开",
+                        color = palette.textTertiary,
+                        fontSize = 11.sp,
+                    )
+                }
+
+                NavTab.entries.forEachIndexed { index, tab ->
+                    NavSwitchRow(
+                        palette = palette,
+                        tab = tab,
+                        visible = tab in settings.bottomTabs,
+                        onToggle = { viewModel.setBottomTabVisible(tab, it) },
+                        onOpen = { onOpenTab(tab) },
+                        last = index == NavTab.entries.lastIndex,
+                    )
+                }
             }
 
             GlassSection(palette, "课前提醒") {
@@ -599,6 +672,61 @@ private fun IconOption(
             fontSize = 11.sp,
             color = if (selected) palette.accent else palette.textSecondary,
         )
+    }
+}
+
+/**
+ * 底部栏开关的一行。
+ *
+ * 收起来之后这一行本身变成入口——用户把「巴士」从底部栏拿走，还能从设置里点开，
+ * 否则那个功能就等于被删掉了。所以 [visible] 为 false 的行可以点，为 true 的不接点击，
+ * 免得点一下想「看看」反而被导航走。
+ */
+@Composable
+private fun NavSwitchRow(
+    palette: GlassPalette,
+    tab: NavTab,
+    visible: Boolean,
+    onToggle: (Boolean) -> Unit,
+    onOpen: () -> Unit,
+    last: Boolean,
+) {
+    val openable = !tab.fixed && !visible
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (openable) Modifier.clickable(onClick = onOpen) else Modifier)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = tab.icon(),
+                contentDescription = null,
+                tint = if (visible) palette.textSecondary else palette.textTertiary,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(tab.label, color = palette.textPrimary, fontSize = 15.sp)
+                Text(tab.hint(visible), color = palette.textTertiary, fontSize = 11.sp)
+            }
+            if (tab.fixed) {
+                Text("固定", color = palette.textTertiary, fontSize = 11.sp)
+            } else {
+                Switch(
+                    checked = visible,
+                    onCheckedChange = onToggle,
+                    colors = SwitchDefaults.colors(checkedTrackColor = palette.accent),
+                )
+            }
+        }
+        if (!last) {
+            HorizontalDivider(
+                modifier = Modifier.padding(start = 48.dp),
+                color = palette.textPrimary.copy(alpha = 0.06f),
+            )
+        }
     }
 }
 

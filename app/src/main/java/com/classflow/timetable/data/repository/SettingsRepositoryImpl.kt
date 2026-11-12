@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.classflow.timetable.domain.model.AppSettings
 import com.classflow.timetable.domain.model.BackdropStrength
+import com.classflow.timetable.domain.model.NavTab
 import com.classflow.timetable.domain.model.ThemeMode
 import com.classflow.timetable.domain.repository.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -34,6 +35,8 @@ class SettingsRepositoryImpl @Inject constructor(
         val reminderMinutes = intPreferencesKey("reminder_minutes")
         val backdropFile = stringPreferencesKey("backdrop_file")
         val backdropStrength = stringPreferencesKey("backdrop_strength")
+        val homeTab = stringPreferencesKey("home_tab")
+        val bottomTabs = stringPreferencesKey("bottom_tabs")
     }
 
     override val settings: Flow<AppSettings> = context.dataStore.data
@@ -47,6 +50,8 @@ class SettingsRepositoryImpl @Inject constructor(
                 reminderMinutes = prefs[Keys.reminderMinutes] ?: 15,
                 backdropFile = prefs[Keys.backdropFile]?.takeIf { it.isNotBlank() },
                 backdropStrength = BackdropStrength.safeOf(prefs[Keys.backdropStrength]),
+                homeTab = NavTab.safeOf(prefs[Keys.homeTab]) ?: NavTab.TODAY,
+                bottomTabs = NavTab.decode(prefs[Keys.bottomTabs]),
             )
         }
 
@@ -70,5 +75,19 @@ class SettingsRepositoryImpl @Inject constructor(
 
     override suspend fun setBackdropStrength(strength: BackdropStrength) {
         context.dataStore.edit { it[Keys.backdropStrength] = strength.name }
+    }
+
+    override suspend fun setHomeTab(tab: NavTab) {
+        context.dataStore.edit { it[Keys.homeTab] = tab.name }
+    }
+
+    override suspend fun setBottomTabVisible(tab: NavTab, visible: Boolean) {
+        if (tab.fixed) return
+        context.dataStore.edit { prefs ->
+            val current = NavTab.decode(prefs[Keys.bottomTabs]).toMutableSet()
+            if (visible) current.add(tab) else current.remove(tab)
+            // 收起最后一个也不拦：固定项永远在，底栏不会空掉
+            prefs[Keys.bottomTabs] = NavTab.encode(current)
+        }
     }
 }

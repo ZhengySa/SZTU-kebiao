@@ -21,33 +21,30 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.DirectionsBus
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.classflow.timetable.domain.model.BackdropStrength
+import com.classflow.timetable.domain.model.NavTab
 import com.classflow.timetable.ui.ShellViewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -81,8 +78,6 @@ import com.classflow.timetable.ui.screen.week.WeekScreen
 import com.classflow.timetable.ui.theme.LiquidBackdrop
 import com.classflow.timetable.ui.theme.LocalGlassPalette
 
-private data class BottomItem(val route: String, val label: String, val icon: ImageVector)
-
 /**
  * 底部 Tab 之间只做淡入淡出。
  *
@@ -95,14 +90,6 @@ private val tabEnter: AnimatedContentTransitionScope<NavBackStackEntry>.() -> En
 private val tabExit: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition =
     { fadeOut(animationSpec = tween(140)) }
 
-private val BOTTOM_ITEMS = listOf(
-    BottomItem(Routes.TODAY, "今日", Icons.Filled.DateRange),
-    BottomItem(Routes.WEEK, "课表", Icons.Filled.List),
-    BottomItem(Routes.BUS, "巴士", Icons.Filled.DirectionsBus),
-    BottomItem(Routes.MAP, "地图", Icons.Filled.Map),
-    BottomItem(Routes.SETTINGS, "设置", Icons.Filled.Settings),
-)
-
 @Composable
 fun ClassFlowNavHost() {
     val navController = rememberNavController()
@@ -112,11 +99,39 @@ fun ClassFlowNavHost() {
     // 自定义背景图：整个 App 只解码一次，铺在 NavHost 底下所有页面共用
     val shell: ShellViewModel = hiltViewModel()
     val backdrop by shell.backdrop.collectAsStateWithLifecycle()
-    val shellSettings by shell.settings.collectAsStateWithLifecycle()
+    val loadedSettings by shell.settings.collectAsStateWithLifecycle()
 
-    val onTabRoutes = BOTTOM_ITEMS.any { item ->
-        currentDestination?.hierarchy?.any { it.route == item.route } == true
+    // 首页 / 底部栏都由设置决定，所以设置没读上来之前先不建导航图。
+    // 先按默认值建一次、读到真值再重建，会让返回栈被重置，肉眼上就是「闪一下回首页」；
+    // 更糟的是首页设置会停留在默认的「今日」，用户在设置里选了课表也不生效。
+    // collectAsStateWithLifecycle 读出来的值每次读取都可能变，编译器不会替我们收窄类型，
+    // 所以先落成一个局部 val —— 过了这个 null 检查它就是非空的。
+    val settingsOrNull = loadedSettings
+    if (settingsOrNull == null) {
+        LiquidBackdrop(
+            palette = palette,
+            backdrop = backdrop,
+            strength = BackdropStrength.MEDIUM,
+        ) {
+            Box(Modifier.fillMaxSize())
+        }
+        return
     }
+    val shellSettings = settingsOrNull
+
+    // 收起 / 放回入口只是过滤这一个集合；按枚举顺序排，不跟用户点开关的先后乱跳
+    val bottomTabs = remember(shellSettings.bottomTabs) {
+        shellSettings.bottomTabs.sortedBy { it.ordinal }
+    }
+
+    // 底部栏是否出现，看的永远是「所有入口」，不是「当前显示的那几个」。
+    // 否则用户把某个 Tab 收起来之后，从设置里点进去就再也看不到底栏，等于被关在里面。
+    val onTabRoutes = NavTab.entries.any { tab ->
+        currentDestination?.hierarchy?.any { it.route == tab.route() } == true
+    }
+
+    // 只在建图那一刻取一次：在设置里改「首页」不该把用户从当前页拽走，下次冷启动才生效
+    val startRoute = remember { shellSettings.homeTab.route() }
 
     LiquidBackdrop(
         palette = palette,
@@ -131,6 +146,7 @@ fun ClassFlowNavHost() {
             bottomBar = {
                 if (onTabRoutes) {
                     FloatingGlassBar(
+                        tabs = bottomTabs,
                         selectedRoute = currentDestination?.route,
                         onSelect = { route ->
                             navController.navigate(route) {
@@ -145,7 +161,7 @@ fun ClassFlowNavHost() {
         ) { padding ->
             NavHost(
                 navController = navController,
-                startDestination = Routes.TODAY,
+                startDestination = startRoute,
                 modifier = Modifier.padding(padding),
                 // 默认转场是 700ms 的淡入淡出，太慢；这里压到 280ms 并只给一点位移
                 enterTransition = {
@@ -288,6 +304,16 @@ fun ClassFlowNavHost() {
                         onOpenWidgetGuide = { navController.navigate(Routes.WIDGET_GUIDE) },
                         onOpenPrivacy = { navController.navigate(Routes.PRIVACY) },
                         onOpenAbout = { navController.navigate(Routes.ABOUT) },
+                        // 收进设置里的入口：跳法和底部栏一样，回来时状态还在
+                        onOpenTab = { tab ->
+                            if (tab != NavTab.SETTINGS) {
+                                navController.navigate(tab.route()) {
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        },
                     )
                 }
 
@@ -356,20 +382,33 @@ fun ClassFlowNavHost() {
     }
 }
 
-/** 悬浮玻璃胶囊导航：不贴底、不铺满，让背景透出来。 */
+/**
+ * 悬浮玻璃胶囊导航：不贴底、不铺满，让背景透出来。
+ *
+ * [tabs] 是用户在设置里挑出来的入口，数量会变，所以横向留白跟着数量走：
+ * 五个按钮时不能留太多白（最右边会被挤出屏幕），只剩一两个时也不能让胶囊横成一条面包。
+ */
 @Composable
 private fun FloatingGlassBar(
+    tabs: List<NavTab>,
     selectedRoute: String?,
     onSelect: (String) -> Unit,
 ) {
     val palette = LocalGlassPalette.current
     val shape = RoundedCornerShape(28.dp)
+    val sideInset = when (tabs.size) {
+        0, 1 -> 110.dp
+        2 -> 72.dp
+        3 -> 48.dp
+        else -> 34.dp
+    }
+    val itemPadding = if (tabs.size <= 3) 22.dp else 13.dp
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 34.dp)
+            .padding(horizontal = sideInset)
             .padding(bottom = 14.dp),
     ) {
         Row(
@@ -382,8 +421,8 @@ private fun FloatingGlassBar(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BOTTOM_ITEMS.forEach { item ->
-                val selected = selectedRoute == item.route
+            tabs.forEach { tab ->
+                val selected = selectedRoute == tab.route()
                 // Tab 切换是最高频的交互，颜色和图标都跟着手指走，而不是"啪"地跳变
                 val tint by animateColorAsState(
                     targetValue = if (selected) palette.accent else palette.textTertiary,
@@ -398,15 +437,14 @@ private fun FloatingGlassBar(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .clickable { onSelect(item.route) }
-                        // 5 个 Tab 时横向留白要收窄，否则最右边的「设置」会被挤出屏幕
-                        .padding(horizontal = 13.dp, vertical = 6.dp),
+                        .clickable { onSelect(tab.route()) }
+                        .padding(horizontal = itemPadding, vertical = 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                 ) {
                     Icon(
-                        item.icon,
-                        contentDescription = item.label,
+                        tab.icon(),
+                        contentDescription = tab.label,
                         tint = tint,
                         modifier = Modifier
                             .size(20.dp)
@@ -416,7 +454,7 @@ private fun FloatingGlassBar(
                             },
                     )
                     Text(
-                        item.label,
+                        tab.label,
                         color = tint,
                         fontSize = 9.5.sp,
                         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,

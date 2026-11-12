@@ -38,6 +38,47 @@ enum class BackdropStrength {
     }
 }
 
+/**
+ * 可以放在底部栏、也可以当首页的入口。
+ *
+ * 这里只有「名字」，不带路由和图标——[com.classflow.timetable.domain.model] 这层不该知道 Compose。
+ * 路由和图标在 `ui/navigation/TabSpecs.kt` 里映射。
+ *
+ * [SETTINGS] 是固定的：它是唯一能把收起来的入口重新打开的地方，
+ * 允许隐藏就等于给用户一个「再也进不去设置」的开关，不划算。
+ */
+enum class NavTab(val label: String, val fixed: Boolean = false) {
+    TODAY("今日"),
+    WEEK("课表"),
+    BUS("巴士"),
+    MAP("地图"),
+    SETTINGS("设置", fixed = true),
+    ;
+
+    companion object {
+        /** 默认全开，和 1.0.4 之前的样子一致，老用户升级上来不会觉得东西丢了。 */
+        val default: List<NavTab> get() = entries.toList()
+
+        fun safeOf(raw: String?): NavTab? = entries.firstOrNull { it.name == raw }
+
+        /**
+         * 把 DataStore 里那串逗号分隔的名字读回集合。
+         *
+         * 三条规矩，都是为了「坏数据不能让底部栏消失」：
+         * 认不出的名字直接丢（版本回滚时可能留下新名字）、固定项永远补回来
+         * （它是唯一能把收起来的入口重新打开的地方）、整串是空就退回默认。
+         */
+        fun decode(raw: String?): Set<NavTab> {
+            if (raw == null) return default.toSet()
+            val parsed = raw.split(',').mapNotNull { safeOf(it.trim()) }.toSet()
+            return parsed + entries.filter { it.fixed }
+        }
+
+        fun encode(tabs: Set<NavTab>): String =
+            tabs.sortedBy { it.ordinal }.joinToString(",") { it.name }
+    }
+}
+
 /** 全部来自 DataStore 的偏好设置。 */
 data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -53,6 +94,15 @@ data class AppSettings(
     val backdropFile: String? = null,
     /** 背景图的存在感，只在 [backdropFile] 不为空时有意义。 */
     val backdropStrength: BackdropStrength = BackdropStrength.MEDIUM,
+    /** 冷启动落在哪一页。运行期间改它不会把用户从当前页面拽走，下次打开才生效。 */
+    val homeTab: NavTab = NavTab.TODAY,
+    /**
+     * 底部栏显示哪些入口，至少含 [NavTab.SETTINGS]。
+     *
+     * 用 Set 而不是 List：这里的「有没有」才是语义，顺序在渲染时按枚举顺序排，
+     * 不跟着用户点击开关的先后乱跳。
+     */
+    val bottomTabs: Set<NavTab> = NavTab.default.toSet(),
 )
 
 /** 学期设置的编辑草稿（保存前允许非法值，由 UI 校验）。 */
