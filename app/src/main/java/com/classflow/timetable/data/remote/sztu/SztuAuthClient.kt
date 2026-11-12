@@ -1,5 +1,6 @@
 package com.classflow.timetable.data.remote.sztu
 
+import com.classflow.timetable.domain.model.ExamSemester
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -170,6 +171,86 @@ class SztuAuthClient(
         }
 
         throw IllegalStateException("教务系统没返回成绩页（可能是这学期还没出成绩，或服务临时异常）。")
+    }
+
+    /** 一次考试查询拿回来的东西：结果页 HTML + 页面上的学期下拉项。 */
+    data class ExamPage(
+        val html: String,
+        val semesters: List<ExamSemester>,
+        /** 这次实际查的学期（页面默认值或我们要求的那个）。 */
+        val semesterLabel: String,
+        /** 是否已经在教务端按「期末」筛过了。 */
+        val serverFilteredFinal: Boolean,
+    )
+
+    /**
+     * 抓考试安排。
+     *
+     * 步骤：GET 查询页 → 读页面上的表单 → 原样 POST 回 `xsksap_list`。
+     * 之所以要读表单而不是直接拼参数，是因为各校部署的字段名不统一
+     * （`xqlb` / `xqlbmc` / 甚至数字 id），照抄表单最不容易出错。
+     *
+     * 三种情况分开处理：
+     *  · 有结果表 → 正常返回（可能 0 行）
+     *  · 页面明确写「无数据」→ 也算正常，0 行
+     *  · 两者都不是 → 抛异常，让上层看见"结构性失败"，而不是误报"没有考试"
+     */
+    suspend fun fetchExams(semesterKey: String? = null): ExamPage = withContext(Dispatchers.IO) {
+        val landing = http.get(SztuConfig.EXAM_QUERY)
+        ensureAlive(landing)
+
+        // 有的部署 GET 直接就把结果画出来了，这时不用再 POST
+        if (ZfExamParser.hasExamRows(landing.body)) {
+            val inline = ZfExamParser.parseQueryForm(landing.body, semesterKey)
+            return@withContext ExamPage(
+                html = landing.body,
+                semesters = inline?.semesters.orEmpty(),
+                semesterLabel = inline?.semesterLabel.orEmpty(),
+                serverFilteredFinal = inline?.filtersFinal ?: false,
+            )
+        }
+
+        val form = ZfExamParser.parseQueryForm(landing.body, semesterKey)
+            ?: throw IllegalStateException("教务的考试查询页没打开（没找到查询表单），可能是教务改版了。")
+
+        val posted = if (form.method == "get") {
+            http.get(form.action + "?" + form.fields.toQueryString())
+        } else {
+            http.postForm(form.action, form.fields, referer = SztuConfig.EXAM_QUERY)
+        }
+        ensureAlive(posted)
+        if (ZfExamParser.hasExamTable(posted.body) || ZfExamParser.isEmptyResult(posted.body)) {
+            return@withContext ExamPage(
+                html = posted.body,
+                semesters = form.semesters,
+                semesterLabel = form.semesterLabel,
+                serverFilteredFinal = form.filtersFinal,
+            )
+        }
+
+        // 表单提交没拿到结果表，再试一次 GET —— 有的部署只认地址参数
+        val viaGet = http.get(SztuConfig.EXAM_LIST + "?" + form.fields.toQueryString())
+        ensureAlive(viaGet)
+        if (ZfExamParser.hasExamTable(viaGet.body) || ZfExamParser.isEmptyResult(viaGet.body)) {
+            return@withContext ExamPage(
+                html = viaGet.body,
+                semesters = form.semesters,
+                semesterLabel = form.semesterLabel,
+                serverFilteredFinal = form.filtersFinal,
+            )
+        }
+
+        throw IllegalStateException("教务返回的页面里没有考试表，这学期的考试安排可能还没开放查询。")
+    }
+
+    private fun ensureAlive(response: MiniHttp.Response) {
+        if (isAuthPage(response.finalUrl, response.body) || ZfGradeParser.isLoginPage(response.body)) {
+            throw SessionExpiredException()
+        }
+    }
+
+    private fun Map<String, String>.toQueryString(): String = entries.joinToString("&") { (k, v) ->
+        java.net.URLEncoder.encode(k, "UTF-8") + "=" + java.net.URLEncoder.encode(v, "UTF-8")
     }
 
     /** 会话有效性探测：能拿到带课表的页面才算有效。 */

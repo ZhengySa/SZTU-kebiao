@@ -42,6 +42,16 @@ object SztuConfig {
     /** 学生成绩查询。带 `?kksj=2025-2026-1` 只看一个学期，不带就是教务系统默认的那一档。 */
     const val GRADES = "https://jwxt.sztu.edu.cn/jsxsd/kscj/cjcx_list"
 
+    /**
+     * 学生考试查询（考试安排）。
+     *
+     * 两步：GET [EXAM_QUERY] 拿到查询页（里面是学期下拉框），
+     * 再把表单 POST 到 [EXAM_LIST] 换结果表。
+     * 不直接把 `?xnxqid=...` 拼在地址上 —— 有的部署只认表单提交。
+     */
+    const val EXAM_QUERY = "https://jwxt.sztu.edu.cn/jsxsd/xsks/xsksap_query"
+    const val EXAM_LIST = "https://jwxt.sztu.edu.cn/jsxsd/xsks/xsksap_list"
+
     /** 密码用 DES/ECB/PKCS5 加密；前端 JS 里 `encryptByDES` 的 key 原文是 "PassB01Il71"，
      *  但 CryptoJS 的 DES 只吃前 8 字节，所以真正参与运算的就是 "PassB01I"。 */
     const val DES_KEY = "PassB01Il71"

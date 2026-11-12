@@ -96,6 +96,18 @@ fun PrivacyScreen(onBack: () -> Unit) {
 
             Block(
                 palette = palette,
+                title = "成绩和考试",
+                body = listOf(
+                    "成绩、考试安排都只来自 jwxt.sztu.edu.cn，用你自己登录后的会话去取，" +
+                        "不经过任何中间服务器。",
+                    "成绩会缓存在本机，断网也能看；考试安排不缓存：" +
+                        "考场和座位属于敏感信息，每次打开临时取，看完只在内存里，" +
+                        "不进数据库、不进备份、也不进桌面小组件。",
+                ),
+            )
+
+            Block(
+                palette = palette,
                 title = "TA 的课表",
                 body = listOf(
                     "导入别人的课表时，只存课表内容和他的学号（用来显示这是谁的课表）。" +

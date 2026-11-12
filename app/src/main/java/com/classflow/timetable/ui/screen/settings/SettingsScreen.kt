@@ -189,6 +189,7 @@ fun SettingsScreen(
     onOpenImport: () -> Unit,
     onOpenSztu: () -> Unit,
     onOpenGrades: () -> Unit,
+    onOpenExams: () -> Unit,
     onOpenLuck: () -> Unit,
     onOpenNbw: () -> Unit,
     onOpenBackup: () -> Unit,
@@ -286,12 +287,18 @@ fun SettingsScreen(
                 )
             }
 
-            GlassSection(palette, "成绩") {
+            GlassSection(palette, "学业") {
                 GlassRow(
                     palette = palette,
                     title = "成绩与绩点",
                     subtitle = "课程成绩 · 总绩点 · 排名，可切换学期",
                     onClick = onOpenGrades,
+                )
+                GlassRow(
+                    palette = palette,
+                    title = "考试安排",
+                    subtitle = "期末考试的时间 · 地点 · 座位号",
+                    onClick = onOpenExams,
                     last = true,
                 )
             }

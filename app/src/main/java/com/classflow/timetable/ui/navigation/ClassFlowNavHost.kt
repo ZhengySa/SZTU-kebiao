@@ -66,6 +66,7 @@ import com.classflow.timetable.ui.screen.nbw.NbwDetailScreen
 import com.classflow.timetable.ui.screen.nbw.NbwScreen
 import com.classflow.timetable.ui.screen.detail.CourseDetailScreen
 import com.classflow.timetable.ui.screen.edit.CourseEditScreen
+import com.classflow.timetable.ui.screen.exam.ExamScreen
 import com.classflow.timetable.ui.screen.grade.GradeScreen
 import com.classflow.timetable.ui.screen.luck.LuckScreen
 import com.classflow.timetable.ui.screen.help.AboutScreen
@@ -227,6 +228,13 @@ fun ClassFlowNavHost() {
                     )
                 }
 
+                composable(Routes.EXAMS) {
+                    ExamScreen(
+                        onBack = { navController.popBackStack() },
+                        onLogin = { navController.navigate(Routes.SZTU_LOGIN) },
+                    )
+                }
+
                 composable(Routes.NBW) {
                     NbwScreen(
                         onOpenDetail = { path -> navController.navigate(Routes.nbwDetail(path)) },
@@ -273,6 +281,7 @@ fun ClassFlowNavHost() {
                         onOpenImport = { navController.navigate(Routes.IMPORT) },
                         onOpenSztu = { navController.navigate(Routes.SZTU_LOGIN) },
                         onOpenGrades = { navController.navigate(Routes.GRADES) },
+                        onOpenExams = { navController.navigate(Routes.EXAMS) },
                         onOpenLuck = { navController.navigate(Routes.LUCK) },
                         onOpenNbw = { navController.navigate(Routes.NBW) },
                         onOpenBackup = { navController.navigate(Routes.BACKUP) },

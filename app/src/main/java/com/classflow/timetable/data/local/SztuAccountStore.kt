@@ -105,6 +105,13 @@ class SztuAccountStore @Inject constructor(
         }
     }
 
+    /** 教务在每次请求后可能刷新 Cookie；有变化才写盘，避免无谓的 IO。 */
+    suspend fun refreshCookies(cookies: String) {
+        if (cookies.isBlank()) return
+        if (dataStore.data.first()[Keys.COOKIES] == cookies) return
+        dataStore.edit { prefs -> prefs[Keys.COOKIES] = cookies }
+    }
+
     suspend fun clearSession() {
         dataStore.edit { prefs ->
             prefs.remove(Keys.COOKIES)

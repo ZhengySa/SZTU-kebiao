@@ -18,6 +18,7 @@ object Routes {
     const val BUS = "bus"
     const val MAP = "map"
     const val GRADES = "grades"
+    const val EXAMS = "exams"
     const val LUCK = "luck"
 
     // 情侣课表：不再是独立页面，而是「我 / TA」一键切换；
