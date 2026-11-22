@@ -21,6 +21,7 @@ object Routes {
     const val GRADES = "grades"
     const val EXAMS = "exams"
     const val LUCK = "luck"
+    const val LIBRARY = "library"
 
     // 情侣课表：不再是独立页面，而是「我 / TA」一键切换；
     // 只有「导入 TA 的课表」这一条登录流程还需要单独的路由。

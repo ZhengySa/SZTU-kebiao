@@ -207,6 +207,7 @@ fun SettingsScreen(
     onOpenExams: () -> Unit,
     onOpenLuck: () -> Unit,
     onOpenNbw: () -> Unit,
+    onOpenLibrary: () -> Unit,
     onOpenBackup: () -> Unit,
     onOpenWidgetGuide: () -> Unit,
     onOpenPrivacy: () -> Unit,
@@ -296,6 +297,12 @@ fun SettingsScreen(
                     title = "公文通",
                     subtitle = "学校通知公告 · 按教务/科研/行政/学工/校园筛选",
                     onClick = onOpenNbw,
+                )
+                GlassRow(
+                    palette = palette,
+                    title = "图书馆藏查询",
+                    subtitle = "查书名 · 作者 · 索书号，看有没有被人借走",
+                    onClick = onOpenLibrary,
                 )
                 GlassRow(
                     palette = palette,

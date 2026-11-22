@@ -67,6 +67,7 @@ import com.classflow.timetable.ui.screen.edit.CourseEditScreen
 import com.classflow.timetable.ui.screen.exam.ExamScreen
 import com.classflow.timetable.ui.screen.grade.GradeScreen
 import com.classflow.timetable.ui.screen.luck.LuckScreen
+import com.classflow.timetable.ui.screen.library.LibraryScreen
 import com.classflow.timetable.ui.screen.help.AboutScreen
 import com.classflow.timetable.ui.screen.help.PrivacyScreen
 import com.classflow.timetable.ui.screen.imports.ImportScreen
@@ -295,6 +296,10 @@ fun ClassFlowNavHost() {
                     LuckScreen(onBack = { navController.popBackStack() })
                 }
 
+                composable(Routes.LIBRARY) {
+                    LibraryScreen(onBack = { navController.popBackStack() })
+                }
+
                 composable(
                     route = Routes.SETTINGS,
                     enterTransition = tabEnter,
@@ -311,6 +316,7 @@ fun ClassFlowNavHost() {
                         onOpenExams = { navController.navigate(Routes.EXAMS) },
                         onOpenLuck = { navController.navigate(Routes.LUCK) },
                         onOpenNbw = { navController.navigate(Routes.NBW) },
+                        onOpenLibrary = { navController.navigate(Routes.LIBRARY) },
                         onOpenBackup = { navController.navigate(Routes.BACKUP) },
                         onOpenWidgetGuide = { navController.navigate(Routes.WIDGET_GUIDE) },
                         onOpenPrivacy = { navController.navigate(Routes.PRIVACY) },
